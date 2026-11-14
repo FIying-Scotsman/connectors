@@ -12,7 +12,7 @@ from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_
 from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_stix_tool import (
     GTISoftwareToolkitToSTIXTool,
 )
-from connector.src.custom.mappers.relationship_reasons import targeting_reason
+from connector.src.custom.mappers.targeting_mappers import targeting_relationships
 from connector.src.custom.mappers.timing_models import (
     IdentityWithTiming,
     LocationWithTiming,
@@ -20,7 +20,6 @@ from connector.src.custom.mappers.timing_models import (
 from connector.src.custom.models.gti.gti_software_toolkit_model import (
     GTISoftwareToolkitData,
 )
-from connector.src.stix.octi.models.relationship_model import OctiRelationshipModel
 from connector.src.utils.converters.generic_converter_config import BaseMapper
 from connectors_sdk.models import (
     OrganizationAuthor,
@@ -122,100 +121,16 @@ class GTISoftwareToolkitToSTIXComposite(BaseMapper):
             attributes.last_modification_date, tz=timezone.utc
         )
 
-        targeted_locations_with_timing = self._get_targeted_locations_with_timing(
-            locations_with_timing
+        relationships.extend(
+            targeting_relationships(
+                tool,
+                locations_with_timing,
+                sectors_with_timing,
+                organization_id=self.organization.id,
+                marking_ids=[self.tlp_marking.id],
+                created=created,
+                modified=modified,
+            )
         )
-        for location_with_timing in targeted_locations_with_timing:
-            location = location_with_timing.location
-            relationship = OctiRelationshipModel.create(
-                relationship_type="targets",
-                source_ref=tool.id,
-                target_ref=location.id,
-                organization_id=self.organization.id,
-                marking_ids=[self.tlp_marking.id],
-                created=created,
-                modified=modified,
-                start_time=location_with_timing.first_seen,
-                stop_time=location_with_timing.last_seen,
-                description=targeting_reason(
-                    tool, "targets", location, location_with_timing
-                ),
-            )
-            relationships.append(relationship)
-
-        source_locations_with_timing = self._get_source_locations_with_timing(
-            locations_with_timing
-        )
-        for location_with_timing in source_locations_with_timing:
-            location = location_with_timing.location
-            relationship = OctiRelationshipModel.create(
-                relationship_type="originates-from",
-                source_ref=tool.id,
-                target_ref=location.id,
-                organization_id=self.organization.id,
-                marking_ids=[self.tlp_marking.id],
-                created=created,
-                modified=modified,
-                start_time=location_with_timing.first_seen,
-                stop_time=location_with_timing.last_seen,
-                description=targeting_reason(
-                    tool, "originates-from", location, location_with_timing
-                ),
-            )
-            relationships.append(relationship)
-
-        for sector_with_timing in sectors_with_timing:
-            sector = sector_with_timing.identity
-            relationship = OctiRelationshipModel.create(
-                relationship_type="targets",
-                source_ref=tool.id,
-                target_ref=sector.id,
-                organization_id=self.organization.id,
-                marking_ids=[self.tlp_marking.id],
-                created=created,
-                modified=modified,
-                start_time=sector_with_timing.first_seen,
-                stop_time=sector_with_timing.last_seen,
-                description=targeting_reason(
-                    tool, "targets", sector, sector_with_timing
-                ),
-            )
-            relationships.append(relationship)
 
         return relationships
-
-    def _get_targeted_locations_with_timing(
-        self, locations_with_timing: list[LocationWithTiming]
-    ) -> list[LocationWithTiming]:
-        """Get LocationWithTiming objects that correspond to targeted countries.
-
-        Args:
-            locations_with_timing: list of all LocationWithTiming objects
-
-        Returns:
-            list of LocationWithTiming objects that correspond to targeted countries
-
-        """
-        return [
-            location_with_timing
-            for location_with_timing in locations_with_timing
-            if location_with_timing.is_targeted
-        ]
-
-    def _get_source_locations_with_timing(
-        self, locations_with_timing: list[LocationWithTiming]
-    ) -> list[LocationWithTiming]:
-        """Get LocationWithTiming objects that correspond to source countries.
-
-        Args:
-            locations_with_timing: list of all LocationWithTiming objects
-
-        Returns:
-            list of LocationWithTiming objects that correspond to source countries
-
-        """
-        return [
-            location_with_timing
-            for location_with_timing in locations_with_timing
-            if location_with_timing.is_source
-        ]

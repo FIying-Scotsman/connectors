@@ -382,7 +382,7 @@ def test_gti_campaign_to_stix_location_empty_regions(
 def test_gti_campaign_to_stix_location_without_attributes(
     campaign_without_attributes, mock_organization, mock_tlp_marking
 ):
-    """Test conversion of GTI campaign without attributes returns empty list."""
+    """Test conversion of GTI campaign without attributes raises, like the other collections."""
     # GIVEN: A GTI campaign with attributes field set to None
     # making it impossible to access any campaign data including regions
     mapper = _given_gti_campaign_location_mapper(
@@ -390,12 +390,9 @@ def test_gti_campaign_to_stix_location_without_attributes(
     )
 
     # WHEN: Converting the GTI campaign data to STIX location objects
-    locations = _when_convert_to_stix(mapper)
-
-    # THEN: An empty list should be returned
-    # since no attributes are available to process
-    assert isinstance(locations, list)  # noqa: S101
-    assert len(locations) == 0  # noqa: S101
+    # THEN: The invalid campaign is reported
+    with pytest.raises(ValueError, match="Invalid campaign attributes"):
+        _when_convert_to_stix(mapper)
 
 
 @pytest.mark.order(1)
