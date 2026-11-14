@@ -8,13 +8,15 @@ import pytest
 from connector.src.custom.mappers.gti_iocs.gti_ip_to_stix_ip import (
     GTIIPToSTIXIP,
 )
-from connector.src.custom.models.gti.gti_ip_addresses_model import (
+from connector.src.custom.models.gti.gti_assessment_model import (
     ContributingFactors,
     GTIAssessment,
-    GTIIPData,
-    IPModel,
     ThreatScore,
     Verdict,
+)
+from connector.src.custom.models.gti.gti_ip_addresses_model import (
+    GTIIPData,
+    IPModel,
 )
 from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
 from polyfactory.factories.pydantic_factory import ModelFactory

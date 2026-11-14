@@ -19,23 +19,21 @@ from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
     score_from_detection_stats,
     score_from_gti_verdict,
 )
-from connector.src.custom.models.gti.gti_domain_model import (
+from connector.src.custom.models.gti.gti_assessment_model import (
     ContributingFactors,
-    DomainModel,
     GTIAssessment,
-    GTIDomainData,
     LastAnalysisStats,
     Severity,
     ThreatScore,
     Verdict,
 )
+from connector.src.custom.models.gti.gti_domain_model import (
+    DomainModel,
+    GTIDomainData,
+)
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaAttributes,
     IOCDeltaEntry,
-    IOCDeltaGTIAssessment,
-    IOCDeltaSeverity,
-    IOCDeltaThreatScore,
-    IOCDeltaVerdict,
 )
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
 
@@ -205,10 +203,10 @@ def test_ioc_delta_converter_uses_configured_strategy() -> None:
         id="example.com",
         type="domain",
         attributes=IOCDeltaAttributes(
-            gti_assessment=IOCDeltaGTIAssessment(
-                verdict=IOCDeltaVerdict(value="VERDICT_SUSPICIOUS"),
-                severity=IOCDeltaSeverity(value="SEVERITY_MEDIUM"),
-                threat_score=IOCDeltaThreatScore(value=10),
+            gti_assessment=GTIAssessment(
+                verdict=Verdict(value="VERDICT_SUSPICIOUS"),
+                severity=Severity(value="SEVERITY_MEDIUM"),
+                threat_score=ThreatScore(value=10),
             )
         ),
     )

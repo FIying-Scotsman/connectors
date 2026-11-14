@@ -8,13 +8,15 @@ import pytest
 from connector.src.custom.mappers.gti_iocs.gti_url_to_stix_url import (
     GTIUrlToSTIXUrl,
 )
-from connector.src.custom.models.gti.gti_url_model import (
+from connector.src.custom.models.gti.gti_assessment_model import (
     ContributingFactors,
     GTIAssessment,
-    GTIURLData,
     ThreatScore,
-    URLModel,
     Verdict,
+)
+from connector.src.custom.models.gti.gti_url_model import (
+    GTIURLData,
+    URLModel,
 )
 from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
 from polyfactory.factories.pydantic_factory import ModelFactory

@@ -17,20 +17,20 @@ from connector.src.custom.mappers.gti_iocs.gti_domain_to_stix_domain import (
 from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_assessment_description,
 )
-from connector.src.custom.models.gti.gti_domain_model import (
+from connector.src.custom.models.gti.gti_assessment_model import (
     ContributingFactors,
-    DomainModel,
     GTIAssessment,
-    GTIDomainData,
     Severity,
     ThreatScore,
     Verdict,
 )
+from connector.src.custom.models.gti.gti_domain_model import (
+    DomainModel,
+    GTIDomainData,
+)
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaAttributes,
     IOCDeltaEntry,
-    IOCDeltaGTIAssessment,
-    IOCDeltaVerdict,
 )
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
 
@@ -190,9 +190,7 @@ def test_ioc_delta_converter_description(enabled: bool, expected: str | None) ->
         id="example.com",
         type="domain",
         attributes=IOCDeltaAttributes(
-            gti_assessment=IOCDeltaGTIAssessment(
-                verdict=IOCDeltaVerdict(value="VERDICT_MALICIOUS")
-            )
+            gti_assessment=GTIAssessment(verdict=Verdict(value="VERDICT_MALICIOUS"))
         ),
     )
     # When the entry is converted

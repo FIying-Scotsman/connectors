@@ -6,17 +6,19 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from connector.src.custom.models.gti.gti_assessment_model import (
+    GTIAssessment,
+    Severity,
+    ThreatScore,
+    Verdict,
+)
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaAttributes,
     IOCDeltaEntry,
-    IOCDeltaGTIAssessment,
     IOCDeltaRelationshipData,
     IOCDeltaRelationshipItem,
     IOCDeltaRelationshipItemAttributes,
     IOCDeltaRelationships,
-    IOCDeltaSeverity,
-    IOCDeltaThreatScore,
-    IOCDeltaVerdict,
 )
 from pydantic import HttpUrl
 from pydantic.types import SecretStr
@@ -124,10 +126,10 @@ SAMPLE_FILE_ENTRY = IOCDeltaEntry(
         meaningful_name="malware.exe",
         names=["malware.exe"],
         size=12345,
-        gti_assessment=IOCDeltaGTIAssessment(
-            verdict=IOCDeltaVerdict(value="VERDICT_MALICIOUS"),
-            threat_score=IOCDeltaThreatScore(value=85),
-            severity=IOCDeltaSeverity(value="SEVERITY_HIGH"),
+        gti_assessment=GTIAssessment(
+            verdict=Verdict(value="VERDICT_MALICIOUS"),
+            threat_score=ThreatScore(value=85),
+            severity=Severity(value="SEVERITY_HIGH"),
         ),
         last_modification_date=1700000000,
     ),

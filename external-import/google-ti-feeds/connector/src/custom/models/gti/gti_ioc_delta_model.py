@@ -1,28 +1,7 @@
 """Pydantic models for GTI IOC delta NDJSON format."""
 
-from connector.src.custom.models.gti.gti_file_model import ContributingFactors
+from connector.src.custom.models.gti.gti_assessment_model import GTIAssessment
 from pydantic import BaseModel, Field
-
-
-class IOCDeltaVerdict(BaseModel):
-    value: str | None = Field(None)
-
-
-class IOCDeltaSeverity(BaseModel):
-    value: str | None = Field(None)
-
-
-class IOCDeltaThreatScore(BaseModel):
-    value: int | None = Field(None)
-
-
-class IOCDeltaGTIAssessment(BaseModel):
-    verdict: IOCDeltaVerdict | None = Field(None)
-    severity: IOCDeltaSeverity | None = Field(None)
-    threat_score: IOCDeltaThreatScore | None = Field(None)
-    # Same keys as the collection IOCs; the file model holds the superset.
-    contributing_factors: ContributingFactors | None = Field(None)
-    description: str | None = Field(None)
 
 
 class IOCDeltaRelationshipItemAttributes(BaseModel):
@@ -61,7 +40,7 @@ class IOCDeltaAttributes(BaseModel):
     # URL fields
     url: str | None = Field(None)
     # Common fields
-    gti_assessment: IOCDeltaGTIAssessment | None = Field(None)
+    gti_assessment: GTIAssessment | None = Field(None)
     creation_date: int | None = Field(None)
     last_modification_date: int | None = Field(None)
 

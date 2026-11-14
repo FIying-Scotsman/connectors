@@ -8,13 +8,15 @@ import pytest
 from connector.src.custom.mappers.gti_iocs.gti_file_to_stix_file import (
     GTIFileToSTIXFile,
 )
-from connector.src.custom.models.gti.gti_file_model import (
+from connector.src.custom.models.gti.gti_assessment_model import (
     ContributingFactors,
-    FileModel,
     GTIAssessment,
-    GTIFileData,
     ThreatScore,
     Verdict,
+)
+from connector.src.custom.models.gti.gti_file_model import (
+    FileModel,
+    GTIFileData,
 )
 from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
 from polyfactory.factories.pydantic_factory import ModelFactory
