@@ -4,6 +4,7 @@ import ipaddress
 from datetime import datetime, timezone
 from typing import Any
 
+from connector.src.custom.mappers.gti_iocs.gti_links import gti_external_reference
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
@@ -194,6 +195,7 @@ class GTIIPToSTIXIP(BaseMapper):
             indicator_types=indicator_types,
             score=score,
             description=self._get_description(),
+            external_references=[gti_external_reference("ip_address", self.ip.id)],
             created=created,
             modified=modified,
         )

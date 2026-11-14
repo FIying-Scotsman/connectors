@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from connector.src.custom.convert_to_stix.convert_to_stix_base import BaseConvertToSTIX
+from connector.src.custom.mappers.gti_iocs.gti_links import gti_external_reference
 from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_assessment_description,
 )
@@ -238,11 +239,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             ),
             create_observables=True,
             external_references=[
-                ExternalReference(
-                    source_name=f"[GTI] File {entry.id}",
-                    description="Google Threat Intelligence File Link",
-                    url=f"https://www.virustotal.com/gui/file/{entry.id}",
-                )
+                ExternalReference(**gti_external_reference("file", entry.id))
             ],
         )
 
@@ -292,11 +289,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             ),
             create_observables=True,
             external_references=[
-                ExternalReference(
-                    source_name=f"[GTI] IP {entry.id}",
-                    description="Google Threat Intelligence IP Link",
-                    url=f"https://www.virustotal.com/gui/ip-address/{entry.id}",
-                )
+                ExternalReference(**gti_external_reference("ip_address", entry.id))
             ],
         )
 
@@ -322,11 +315,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             ),
             create_observables=True,
             external_references=[
-                ExternalReference(
-                    source_name=f"[GTI] URL {attrs.url}",
-                    description="Google Threat Intelligence URL Link",
-                    url=f"https://www.virustotal.com/gui/url/{entry.id}",
-                )
+                ExternalReference(**gti_external_reference("url", entry.id, attrs.url))
             ],
         )
 
@@ -352,11 +341,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             ),
             create_observables=True,
             external_references=[
-                ExternalReference(
-                    source_name=f"[GTI] Domain {entry.id}",
-                    description="Google Threat Intelligence Domain Link",
-                    url=f"https://www.virustotal.com/gui/domain/{entry.id}",
-                )
+                ExternalReference(**gti_external_reference("domain", entry.id))
             ],
         )
 

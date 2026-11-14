@@ -668,7 +668,7 @@ For each IOC type, an **Indicator** is created with `create_observables=True`, w
 | `attributes.creation_date`                     | `valid_from`          | UTC timestamp when the IOC was first seen       |
 | `attributes.gti_assessment`                    | `x_opencti_score`     | Computed with `GTI_INDICATOR_SCORING`           |
 | `attributes.gti_assessment`                    | `description`         | When `GTI_EXTENDED_DESCRIPTIONS` is `true`      |
-| `id`                                           | `external_references` | Link to the GTI page for this IOC               |
+| `id`                                           | `external_references` | Link to the GTI page for this IOC, also set on the indicators of collection IOCs |
 
 #### Relationship mapping
 
