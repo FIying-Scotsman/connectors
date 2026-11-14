@@ -312,6 +312,7 @@ IOC options apply to the IOCs (files, domains, URLs, IP addresses) imported by a
 | Variable                | Description                                              | Default value  | Supported values                                     |
 |-------------------------|----------------------------------------------------------|----------------|------------------------------------------------------|
 | `GTI_INDICATOR_SCORING` | Strategy used to compute the score of IOC indicators and observables | `threat_score` | `threat_score`, `gti_derived`, `average_detection` |
+| `GTI_IOC_IMPORT_THRESHOLD` | Maximum number of IOCs a report or campaign may reference for its IOCs to be fetched. Above it, the IOC sub-entities (`domains`, `files`, `urls`, `ip_addresses`) of that report or campaign are skipped and a warning is logged; its other sub-entities are still imported. Uses the `counters.iocs` value returned by GTI, so no extra API call is made | unset (disabled) | Integer `>= 1` |
 
 Scoring strategies:
 

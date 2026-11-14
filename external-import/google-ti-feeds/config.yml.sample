@@ -15,3 +15,4 @@ gti:
   # indicator_require_malware_family: false
   # indicator_require_threat_actor: false
   # indicator_scoring: threat_score
+  # ioc_import_threshold: 250

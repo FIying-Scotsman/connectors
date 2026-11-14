@@ -5,6 +5,7 @@ from typing import Any
 
 from connector.src.custom.client_api.client_api import ClientAPI
 from connector.src.custom.configs import GTIConfig
+from connector.src.custom.configs.gti_config_common import IOC_SUBENTITY_TYPES
 from connector.src.octi.work_manager import WorkManager
 
 LOG_PREFIX = "[BaseOrchestrator]"
@@ -155,4 +156,41 @@ class BaseOrchestrator:
             subentity_type
             for subentity_type in subentity_types
             if getattr(counters, subentity_type, None) != 0
+        ]
+
+    def _skip_iocs_above_threshold(
+        self, subentity_types: list[str], entity: Any
+    ) -> list[str]:
+        """Drop IOC sub-entity types when the entity references too many IOCs.
+
+        The IOC count comes from ``attributes.counters.iocs``. Entities without
+        counters, or with the threshold unset, keep every sub-entity type.
+
+        Args:
+            subentity_types: The sub-entity types to fetch.
+            entity: The GTI report or campaign.
+
+        Returns:
+            The sub-entity types to fetch.
+
+        """
+        threshold = getattr(self.config, "ioc_import_threshold", None)
+        counters = getattr(getattr(entity, "attributes", None), "counters", None)
+        ioc_count = getattr(counters, "iocs", None)
+        if threshold is None or ioc_count is None or ioc_count <= threshold:
+            return subentity_types
+
+        self.logger.warning(
+            "IOC count above threshold, skipping IOC sub-entities",
+            {
+                "prefix": LOG_PREFIX,
+                "entity_id": getattr(entity, "id", None),
+                "ioc_count": ioc_count,
+                "ioc_import_threshold": threshold,
+            },
+        )
+        return [
+            subentity_type
+            for subentity_type in subentity_types
+            if subentity_type not in IOC_SUBENTITY_TYPES
         ]

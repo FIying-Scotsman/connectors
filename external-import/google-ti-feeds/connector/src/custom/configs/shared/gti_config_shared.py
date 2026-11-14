@@ -25,3 +25,12 @@ class GTISharedConfig(GTIBaseConfig):
         "IOC (last_analysis_stats). When the selected strategy has no data for an "
         "IOC, 'threat_score' is used.",
     )
+    ioc_import_threshold: int | None = Field(
+        default=None,
+        ge=1,
+        description="Maximum number of IOCs (files, domains, URLs, IP addresses) "
+        "a report or campaign may reference for its IOCs to be fetched. Above it, "
+        "the IOC sub-entities of that report or campaign are skipped, which saves "
+        "the API quota they would use; its other sub-entities are still imported. "
+        "Leave unset to always fetch IOCs.",
+    )

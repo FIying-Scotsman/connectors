@@ -86,8 +86,9 @@ class OrchestratorReport(BaseOrchestrator):
                     subentities = await self.client_api.fetch_subentities(
                         entity_name="entity_id",
                         entity_id=report.id,
-                        subentity_types=self._filter_subentity_types(
-                            subentity_types, report
+                        subentity_types=self._skip_iocs_above_threshold(
+                            self._filter_subentity_types(subentity_types, report),
+                            report,
                         ),
                     )
 
