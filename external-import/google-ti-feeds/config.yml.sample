@@ -14,3 +14,4 @@ gti:
   # indicator_min_score: 50
   # indicator_require_malware_family: false
   # indicator_require_threat_actor: false
+  # indicator_scoring: threat_score

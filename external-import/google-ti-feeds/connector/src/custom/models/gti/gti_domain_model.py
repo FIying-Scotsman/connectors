@@ -75,8 +75,13 @@ class ContributingFactors(BaseModel):
     mandiant_association_malware: bool | None = Field(
         None, description="Indicator if associated with a tracked GTI malware family."
     )
+    gti_confidence_score: int | None = Field(
+        None,
+        description="GTI machine learning confidence (0-100) that the indicator is malicious.",
+    )
     mandiant_confidence_score: int | None = Field(
-        None, description="GTI confidence score for the indicator."
+        None,
+        description="Mandiant confidence score, deprecated by GTI in favour of gti_confidence_score.",
     )
     mandiant_domain_hijack: bool | None = Field(
         None, description="Indicator if the domain was hijacked per GTI."

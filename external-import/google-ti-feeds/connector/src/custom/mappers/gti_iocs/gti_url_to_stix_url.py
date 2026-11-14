@@ -6,6 +6,7 @@ from typing import Any
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_url_model import (
     GTIURLData,
 )
@@ -72,6 +73,7 @@ class GTIUrlToSTIXUrl(BaseMapper):
         url: GTIURLData,
         organization: OrganizationAuthor,
         tlp_marking: TLPMarking,
+        indicator_scoring: str = "threat_score",
     ) -> None:
         """Initialize the GTIUrlToSTIXUrl object.
 
@@ -79,11 +81,13 @@ class GTIUrlToSTIXUrl(BaseMapper):
         url (GTIURLData): The GTI URL data to convert.
         organization (OrganizationAuthor): The organization identity object.
         tlp_marking (TLPMarking): The TLP marking definition.
+        indicator_scoring (str): Score strategy, see `compute_ioc_score`.
 
         """
         self.url = url
         self.organization = organization
         self.tlp_marking = tlp_marking
+        self.indicator_scoring = indicator_scoring
 
     def _create_stix_url(self) -> URL:
         """Create the STIX URL observable object.
@@ -203,39 +207,13 @@ class GTIUrlToSTIXUrl(BaseMapper):
         return {"created": created, "modified": modified}
 
     def _get_score(self) -> int | None:
-        """Get score from URL attributes.
-
-        Priority order:
-        1. threat_score.value
-        2. contributing_factors.mandiant_confidence_score
+        """Get the score computed with the configured scoring strategy.
 
         Returns:
             int | None: The score if available, None otherwise
 
         """
-        if (
-            self.url.attributes
-            and self.url.attributes.gti_assessment
-            and self.url.attributes.gti_assessment.threat_score
-        ):
-            return self.url.attributes.gti_assessment.threat_score.value
-
-        if (
-            self.url.attributes
-            and self.url.attributes.gti_assessment
-            and self.url.attributes.gti_assessment.contributing_factors
-            and hasattr(
-                self.url.attributes.gti_assessment.contributing_factors,
-                "mandiant_confidence_score",
-            )
-            and self.url.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            is not None
-        ):
-            return (
-                self.url.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            )
-
-        return None
+        return compute_ioc_score(self.url.attributes, self.indicator_scoring)
 
     def _get_url_value(self) -> str:
         """Get the URL value with priority order.

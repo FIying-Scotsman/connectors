@@ -6,6 +6,7 @@ from typing import Any
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_file_model import (
     GTIFileData,
 )
@@ -72,6 +73,7 @@ class GTIFileToSTIXFile(BaseMapper):
         file: GTIFileData,
         organization: OrganizationAuthor,
         tlp_marking: TLPMarking,
+        indicator_scoring: str = "threat_score",
     ) -> None:
         """Initialize the GTIFileToSTIXFile object.
 
@@ -79,11 +81,13 @@ class GTIFileToSTIXFile(BaseMapper):
         file (GTIFileData): The GTI file data to convert.
         organization (OrganizationAuthor): The organization identity object.
         tlp_marking (TLPMarking): The TLP marking definition.
+        indicator_scoring (str): Score strategy, see `compute_ioc_score`.
 
         """
         self.file = file
         self.organization = organization
         self.tlp_marking = tlp_marking
+        self.indicator_scoring = indicator_scoring
 
     def _create_stix_file(self) -> File:
         """Create the STIX file observable object.
@@ -224,39 +228,13 @@ class GTIFileToSTIXFile(BaseMapper):
         return {"created": created, "modified": modified}
 
     def _get_score(self) -> int | None:
-        """Get score from file attributes.
-
-        Priority order:
-        1. threat_score.value
-        2. contributing_factors.mandiant_confidence_score
+        """Get the score computed with the configured scoring strategy.
 
         Returns:
             int | None: The score if available, None otherwise
 
         """
-        if (
-            self.file.attributes
-            and self.file.attributes.gti_assessment
-            and self.file.attributes.gti_assessment.threat_score
-        ):
-            return self.file.attributes.gti_assessment.threat_score.value
-
-        if (
-            self.file.attributes
-            and self.file.attributes.gti_assessment
-            and self.file.attributes.gti_assessment.contributing_factors
-            and hasattr(
-                self.file.attributes.gti_assessment.contributing_factors,
-                "mandiant_confidence_score",
-            )
-            and self.file.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            is not None
-        ):
-            return (
-                self.file.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            )
-
-        return None
+        return compute_ioc_score(self.file.attributes, self.indicator_scoring)
 
     def _build_hashes(self) -> dict[str, str] | None:
         """Build hashes dictionary from file attributes.

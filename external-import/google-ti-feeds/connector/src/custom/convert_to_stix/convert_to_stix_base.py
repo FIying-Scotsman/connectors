@@ -9,6 +9,7 @@ from connector.src.custom.configs import (
 from connector.src.custom.configs.converter_config import (
     CONVERTER_CONFIGS,
 )
+from connector.src.custom.configs.gti_config_common import IOC_SUBENTITY_TYPES
 from connector.src.utils.converters import GenericConverterFactory
 from connectors_sdk.models import (  # type: ignore[import-untyped]
     OrganizationAuthor,
@@ -151,6 +152,10 @@ class BaseConvertToSTIX:
                     additional_deps["enable_threat_actor_aliases"] = (
                         self.config.enable_threat_actor_aliases
                     )
+                elif entity_type in IOC_SUBENTITY_TYPES and hasattr(
+                    self.config, "indicator_scoring"
+                ):
+                    additional_deps["indicator_scoring"] = self.config.indicator_scoring
 
                 converter = self.converter_factory.create_converter_by_name(
                     f"{_prefix}{entity_type}", additional_dependencies=additional_deps

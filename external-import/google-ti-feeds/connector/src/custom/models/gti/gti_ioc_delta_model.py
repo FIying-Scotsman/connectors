@@ -1,5 +1,6 @@
 """Pydantic models for GTI IOC delta NDJSON format."""
 
+from connector.src.custom.models.gti.gti_file_model import ContributingFactors
 from pydantic import BaseModel, Field
 
 
@@ -19,6 +20,8 @@ class IOCDeltaGTIAssessment(BaseModel):
     verdict: IOCDeltaVerdict | None = Field(None)
     severity: IOCDeltaSeverity | None = Field(None)
     threat_score: IOCDeltaThreatScore | None = Field(None)
+    # Same keys as the collection IOCs; the file model holds the superset.
+    contributing_factors: ContributingFactors | None = Field(None)
 
 
 class IOCDeltaRelationshipItemAttributes(BaseModel):

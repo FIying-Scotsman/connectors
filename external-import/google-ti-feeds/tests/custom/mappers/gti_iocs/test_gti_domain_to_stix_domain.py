@@ -114,7 +114,7 @@ def domain_with_mandiant_score() -> GTIDomainData:
         attributes=DomainModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
                 verdict=None,
@@ -131,7 +131,7 @@ def domain_with_threat_score() -> GTIDomainData:
         attributes=DomainModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=70),
                 verdict=None,
@@ -148,7 +148,7 @@ def domain_with_zero_score() -> GTIDomainData:
         attributes=DomainModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=0),
                 verdict=None,
@@ -213,7 +213,7 @@ def domain_with_all_data() -> GTIDomainData:
             gti_assessment=GTIAssessmentFactory.build(
                 verdict=VerdictFactory.build(value="MALICIOUS"),
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=95
+                    gti_confidence_score=None, mandiant_confidence_score=95
                 ),
                 threat_score=ThreatScoreFactory.build(value=85),
             ),
@@ -591,7 +591,7 @@ def test_get_score_with_threat_score(
         attributes=DomainModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=70),
             )
@@ -617,7 +617,7 @@ def test_get_score_with_zero_threat_score(
         attributes=DomainModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=0),
             )
@@ -643,7 +643,7 @@ def test_get_score_with_mandiant_score_fallback(
         attributes=DomainModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
             )
@@ -731,7 +731,7 @@ def test_create_stix_domain_method(
         attributes=DomainModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=90
+                    gti_confidence_score=None, mandiant_confidence_score=90
                 )
             )
         ),

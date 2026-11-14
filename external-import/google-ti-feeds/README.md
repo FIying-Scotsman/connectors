@@ -25,6 +25,7 @@ This connector ingests **reports, campaigns, threat actors, malware families, so
   - [5. Vulnerabilities](#5-vulnerabilities)
   - [6. Software Toolkits](#6-software-toolkits)
   - [7. Indicators / IOCs](#7-indicators--iocs)
+  - [Options shared by all collections](#options-shared-by-all-collections)
 - [Data mapping](#data-mapping)
   - [Intrusion-Set](#intrusion-set)
   - [Malware](#malware)
@@ -303,6 +304,24 @@ Unlike the other collections which use the `/collections` search endpoint, the I
 | `GTI_INDICATOR_REQUIRE_MALWARE_FAMILY` | Only import indicators associated with at least one Malware Family           | `false`                            | `true` / `false`                                                                                                             |
 | `GTI_INDICATOR_REQUIRE_THREAT_ACTOR`   | Only import indicators associated with at least one Threat Actor             | `false`                            | `true` / `false`                                                                                                             |
 | `GTI_INDICATOR_SUBENTITIES`       | Comma-separated list of sub-entity types to link to each indicator. Does not change API quota usage. An empty value imports the indicators without any relationship. | `["malware_families", "threat_actors", "software_toolkits"]` | `malware_families`, `threat_actors`, `software_toolkits`, `attack_techniques` |
+
+### Options shared by all collections
+
+IOC options apply to the IOCs (files, domains, URLs, IP addresses) imported by any collection, including the IOC Delta feed.
+
+| Variable                | Description                                              | Default value  | Supported values                                     |
+|-------------------------|----------------------------------------------------------|----------------|------------------------------------------------------|
+| `GTI_INDICATOR_SCORING` | Strategy used to compute the score of IOC indicators and observables | `threat_score` | `threat_score`, `gti_derived`, `average_detection` |
+
+Scoring strategies:
+
+| Strategy            | Score source                                                                                                                                                   |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `threat_score`      | `gti_assessment.threat_score`, then `gti_assessment.contributing_factors.gti_confidence_score`, then `mandiant_confidence_score` (deprecated by GTI)            |
+| `gti_derived`       | `gti_assessment.verdict` base score (malicious `80`, suspicious `60`, undetected `20`, benign `0`) plus a `gti_assessment.severity` bonus (high `+10`, medium `+5`), capped at `95` |
+| `average_detection` | Share of AV engines flagging the IOC in `last_analysis_stats`: `(malicious + 0.5 × suspicious) / (malicious + suspicious + harmless + undetected) × 100`       |
+
+When the selected strategy has no data for an IOC (unknown verdict, no analysis stats), `threat_score` is used. The IOC Delta feed does not provide `last_analysis_stats`, so `average_detection` always uses `threat_score` for it.
 
 ---
 
@@ -615,7 +634,7 @@ For each IOC type, an **Indicator** is created with `create_observables=True`, w
 | GTI IOC Field                                  | STIX Field            | Notes                                           |
 |------------------------------------------------|-----------------------|-------------------------------------------------|
 | `attributes.creation_date`                     | `valid_from`          | UTC timestamp when the IOC was first seen       |
-| `attributes.gti_assessment.threat_score.value` | `x_opencti_score`     | GTI threat score                                |
+| `attributes.gti_assessment`                    | `x_opencti_score`     | Computed with `GTI_INDICATOR_SCORING`           |
 | `id`                                           | `external_references` | Link to the GTI page for this IOC               |
 
 #### Relationship mapping

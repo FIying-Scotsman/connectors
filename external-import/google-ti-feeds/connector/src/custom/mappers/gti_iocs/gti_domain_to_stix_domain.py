@@ -6,6 +6,7 @@ from typing import Any
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_domain_model import (
     GTIDomainData,
 )
@@ -72,6 +73,7 @@ class GTIDomainToSTIXDomain(BaseMapper):
         domain: GTIDomainData,
         organization: OrganizationAuthor,
         tlp_marking: TLPMarking,
+        indicator_scoring: str = "threat_score",
     ) -> None:
         """Initialize the GTIDomainToSTIXDomain object.
 
@@ -79,11 +81,13 @@ class GTIDomainToSTIXDomain(BaseMapper):
         domain (GTIDomainData): The GTI domain data to convert.
         organization (OrganizationAuthor): The organization author object.
         tlp_marking (TLPMarking): The TLP marking object.
+        indicator_scoring (str): Score strategy, see `compute_ioc_score`.
 
         """
         self.domain = domain
         self.organization = organization
         self.tlp_marking = tlp_marking
+        self.indicator_scoring = indicator_scoring
 
     def _create_stix_domain(self) -> DomainName:
         """Create the STIX domain observable object.
@@ -196,39 +200,13 @@ class GTIDomainToSTIXDomain(BaseMapper):
         return {"created": created, "modified": modified}
 
     def _get_score(self) -> int | None:
-        """Get score from domain attributes.
-
-        Priority order:
-        1. threat_score.value
-        2. contributing_factors.mandiant_confidence_score
+        """Get the score computed with the configured scoring strategy.
 
         Returns:
             int | None: The score if available, None otherwise
 
         """
-        if (
-            self.domain.attributes
-            and self.domain.attributes.gti_assessment
-            and self.domain.attributes.gti_assessment.threat_score
-        ):
-            return self.domain.attributes.gti_assessment.threat_score.value
-
-        if (
-            self.domain.attributes
-            and self.domain.attributes.gti_assessment
-            and self.domain.attributes.gti_assessment.contributing_factors
-            and hasattr(
-                self.domain.attributes.gti_assessment.contributing_factors,
-                "mandiant_confidence_score",
-            )
-            and self.domain.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            is not None
-        ):
-            return (
-                self.domain.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            )
-
-        return None
+        return compute_ioc_score(self.domain.attributes, self.indicator_scoring)
 
     def _determine_indicator_types(self) -> list[IndicatorTypeOV]:
         """Determine indicator types from the GTI assessment verdict.

@@ -138,7 +138,7 @@ def file_with_mandiant_score() -> GTIFileData:
             md5="d41d8cd98f00b204e9800998ecf8427e",
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
                 verdict=None,
@@ -159,7 +159,7 @@ def file_with_threat_score() -> GTIFileData:
             gti_assessment=GTIAssessmentFactory.build(
                 threat_score=ThreatScoreFactory.build(value=75),
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 verdict=None,
             ),
@@ -179,7 +179,7 @@ def file_with_zero_score() -> GTIFileData:
             gti_assessment=GTIAssessmentFactory.build(
                 threat_score=ThreatScoreFactory.build(value=0),
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 verdict=None,
             ),
@@ -260,7 +260,7 @@ def file_with_all_data() -> GTIFileData:
             gti_assessment=GTIAssessmentFactory.build(
                 verdict=VerdictFactory.build(value="MALICIOUS"),
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=90
+                    gti_confidence_score=None, mandiant_confidence_score=90
                 ),
                 threat_score=ThreatScoreFactory.build(value=85),
             ),
@@ -642,7 +642,7 @@ def test_get_score_with_threat_score(
         attributes=FileModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=70),
             )
@@ -668,7 +668,7 @@ def test_get_score_with_zero_threat_score(
         attributes=FileModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=0),
             )
@@ -694,7 +694,7 @@ def test_get_score_with_mandiant_score_fallback(
         attributes=FileModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
             )
@@ -886,7 +886,7 @@ def test_create_stix_file_method(
             creation_date=1640995200,
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=90
+                    gti_confidence_score=None, mandiant_confidence_score=90
                 )
             ),
         ),

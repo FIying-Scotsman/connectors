@@ -130,7 +130,7 @@ def url_with_mandiant_score() -> GTIURLData:
         attributes=URLModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
                 verdict=None,
@@ -147,7 +147,7 @@ def url_with_threat_score() -> GTIURLData:
         attributes=URLModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=70),
                 verdict=None,
@@ -164,7 +164,7 @@ def url_with_zero_score() -> GTIURLData:
         attributes=URLModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=0),
                 verdict=None,
@@ -231,7 +231,7 @@ def url_with_all_data() -> GTIURLData:
             gti_assessment=GTIAssessmentFactory.build(
                 verdict=VerdictFactory.build(value="MALICIOUS"),
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=95
+                    gti_confidence_score=None, mandiant_confidence_score=95
                 ),
                 threat_score=ThreatScoreFactory.build(value=85),
             ),
@@ -635,7 +635,7 @@ def test_get_score_with_threat_score(
         attributes=URLModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=70),
             )
@@ -661,7 +661,7 @@ def test_get_score_with_zero_threat_score(
         attributes=URLModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=0),
             )
@@ -687,7 +687,7 @@ def test_get_score_with_mandiant_score_fallback(
         attributes=URLModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
             )
@@ -865,7 +865,7 @@ def test_create_stix_url_method(
             url="https://test.example.com",
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=90
+                    gti_confidence_score=None, mandiant_confidence_score=90
                 )
             ),
         ),

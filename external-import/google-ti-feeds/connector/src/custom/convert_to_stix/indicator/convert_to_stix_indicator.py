@@ -5,7 +5,9 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from connector.src.custom.convert_to_stix.convert_to_stix_base import BaseConvertToSTIX
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
+    IOCDeltaAttributes,
     IOCDeltaEntry,
     IOCDeltaRelationshipItem,
 )
@@ -184,6 +186,10 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
 
         return rel_objects
 
+    def _get_score(self, attrs: IOCDeltaAttributes) -> int | None:
+        """Compute the indicator score with the configured scoring strategy."""
+        return compute_ioc_score(attrs, self.config.indicator_scoring)
+
     def _convert_file(self, entry: IOCDeltaEntry) -> Indicator | None:
         """Convert a file IOC delta entry to a STIX Indicator with file observable."""
         attrs = entry.attributes
@@ -207,11 +213,6 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
 
         pattern = f"[{' OR '.join(patterns)}]"
 
-        if attrs.gti_assessment and attrs.gti_assessment.threat_score:
-            score = attrs.gti_assessment.threat_score.value
-        else:
-            score = None
-
         return Indicator(
             name=attrs.meaningful_name if attrs.meaningful_name else entry.id,
             pattern=pattern,
@@ -219,7 +220,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             main_observable_type="StixFile",
             author=self.organization,
             markings=[self.tlp_marking],
-            score=score,
+            score=self._get_score(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -272,11 +273,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             main_observable_type=observable_type,
             author=self.organization,
             markings=[self.tlp_marking],
-            score=(
-                attrs.gti_assessment.threat_score.value
-                if attrs.gti_assessment and attrs.gti_assessment.threat_score
-                else None
-            ),
+            score=self._get_score(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -305,11 +302,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             main_observable_type="Url",
             author=self.organization,
             markings=[self.tlp_marking],
-            score=(
-                attrs.gti_assessment.threat_score.value
-                if attrs.gti_assessment and attrs.gti_assessment.threat_score
-                else None
-            ),
+            score=self._get_score(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -338,11 +331,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             main_observable_type="Domain-Name",
             author=self.organization,
             markings=[self.tlp_marking],
-            score=(
-                attrs.gti_assessment.threat_score.value
-                if attrs.gti_assessment and attrs.gti_assessment.threat_score
-                else None
-            ),
+            score=self._get_score(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date

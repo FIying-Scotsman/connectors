@@ -7,6 +7,7 @@ from typing import Any
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_ip_addresses_model import (
     GTIIPData,
 )
@@ -76,6 +77,7 @@ class GTIIPToSTIXIP(BaseMapper):
         ip: GTIIPData,
         organization: OrganizationAuthor,
         tlp_marking: TLPMarking,
+        indicator_scoring: str = "threat_score",
     ) -> None:
         """Initialize the GTIIPToSTIXIP object.
 
@@ -83,11 +85,13 @@ class GTIIPToSTIXIP(BaseMapper):
         ip (GTIIPData): The GTI IP data to convert.
         organization (OrganizationAuthor): The organization author object.
         tlp_marking (TLPMarking): The TLP marking object.
+        indicator_scoring (str): Score strategy, see `compute_ioc_score`.
 
         """
         self.ip = ip
         self.organization = organization
         self.tlp_marking = tlp_marking
+        self.indicator_scoring = indicator_scoring
 
     def _detect_ip_version(self) -> str:
         """Detect if IP is IPv4 or IPv6.
@@ -249,39 +253,13 @@ class GTIIPToSTIXIP(BaseMapper):
         return {"created": created, "modified": modified}
 
     def _get_score(self) -> int | None:
-        """Get score from IP attributes.
-
-        Priority order:
-        1. threat_score.value
-        2. contributing_factors.mandiant_confidence_score
+        """Get the score computed with the configured scoring strategy.
 
         Returns:
             int | None: The score if available, None otherwise
 
         """
-        if (
-            self.ip.attributes
-            and self.ip.attributes.gti_assessment
-            and self.ip.attributes.gti_assessment.threat_score
-        ):
-            return self.ip.attributes.gti_assessment.threat_score.value
-
-        if (
-            self.ip.attributes
-            and self.ip.attributes.gti_assessment
-            and self.ip.attributes.gti_assessment.contributing_factors
-            and hasattr(
-                self.ip.attributes.gti_assessment.contributing_factors,
-                "mandiant_confidence_score",
-            )
-            and self.ip.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            is not None
-        ):
-            return (
-                self.ip.attributes.gti_assessment.contributing_factors.mandiant_confidence_score
-            )
-
-        return None
+        return compute_ioc_score(self.ip.attributes, self.indicator_scoring)
 
     def _build_stix_pattern(self) -> str:
         """Build STIX pattern for the IP indicator.

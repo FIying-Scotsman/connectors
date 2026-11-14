@@ -139,7 +139,7 @@ def ip_with_mandiant_score() -> GTIIPData:
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
                 verdict=None,
@@ -156,7 +156,7 @@ def ip_with_threat_score() -> GTIIPData:
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=70),
                 verdict=None,
@@ -173,7 +173,7 @@ def ip_with_zero_score() -> GTIIPData:
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=0),
                 verdict=None,
@@ -238,7 +238,7 @@ def ip_with_all_data() -> GTIIPData:
             gti_assessment=GTIAssessmentFactory.build(
                 verdict=VerdictFactory.build(value="MALICIOUS"),
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=95
+                    gti_confidence_score=None, mandiant_confidence_score=95
                 ),
                 threat_score=ThreatScoreFactory.build(value=85),
             ),
@@ -689,7 +689,7 @@ def test_get_score_with_threat_score(
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=70),
             )
@@ -715,7 +715,7 @@ def test_get_score_with_zero_threat_score(
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=None
+                    gti_confidence_score=None, mandiant_confidence_score=None
                 ),
                 threat_score=ThreatScoreFactory.build(value=0),
             )
@@ -741,7 +741,7 @@ def test_get_score_with_mandiant_score_fallback(
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=85
+                    gti_confidence_score=None, mandiant_confidence_score=85
                 ),
                 threat_score=None,
             )
@@ -865,7 +865,7 @@ def test_create_stix_ipv4_method(
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=90
+                    gti_confidence_score=None, mandiant_confidence_score=90
                 )
             )
         ),
@@ -893,7 +893,7 @@ def test_create_stix_ipv6_method(
         attributes=IPModelFactory.build(
             gti_assessment=GTIAssessmentFactory.build(
                 contributing_factors=ContributingFactorsFactory.build(
-                    mandiant_confidence_score=90
+                    gti_confidence_score=None, mandiant_confidence_score=90
                 )
             )
         ),
