@@ -119,6 +119,7 @@ def test_vulnerability_description_appends_details(
             "ransomware_use": "Known",
         },
         mve_id=None,
+        cpes=None,
         available_mitigation=["Patch"],
     )
     mapper = GTIVulnerabilityToSTIXVulnerability(
