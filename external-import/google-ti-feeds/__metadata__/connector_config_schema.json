@@ -553,6 +553,11 @@
       "description": "Whether to link the IOCs of a report or campaign to the intrusion sets and malware of that same report or campaign (and to its campaigns, for reports): 'indicates' from indicators, 'related-to' from observables. These relationships come from co-occurrence in the same container, not from a GTI attribution, and their number is IOCs times threats: combine with ioc_import_threshold on large containers.",
       "type": "boolean"
     },
+    "GTI_INTRUSION_SET_LINK_TO_CAPABILITIES": {
+      "default": false,
+      "description": "Whether to link the intrusion sets of a report or campaign to the malware, tools and attack patterns ('uses') and the vulnerabilities ('targets') of that same report or campaign. These relationships come from co-occurrence in the same container, not from a GTI attribution.",
+      "type": "boolean"
+    },
     "GTI_EXTENDED_DESCRIPTIONS": {
       "default": false,
       "description": "Whether to append the GTI details that have no dedicated OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and observables: GTI assessment (verdict, severity, threat score, summary, contributing factors). Vulnerabilities: risk rating, exploitation state, exploit availability, exploitation consequence and vectors, remediation priority, exploitation dates, CISA KEV dates and ransomware use, mitigations. Malware families: targeted operating systems and detection names. The GTI description is kept and the details follow it. Can overwrite descriptions edited in OpenCTI, depending on the connector confidence level.",

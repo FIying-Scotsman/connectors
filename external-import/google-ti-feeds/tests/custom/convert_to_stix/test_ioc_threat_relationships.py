@@ -114,7 +114,9 @@ def test_report_orchestrator_adds_relationships_to_report(
     orchestrator = OrchestratorReport(
         work_manager=MagicMock(),
         logger=logging.getLogger(__name__),
-        config=MagicMock(ioc_link_to_threats=True),
+        config=MagicMock(
+            ioc_link_to_threats=True, intrusion_set_link_to_capabilities=False
+        ),
         tlp_level="white",
     )
     report = SimpleNamespace(type="report", id="report--1", object_refs=[])
@@ -135,7 +137,9 @@ def test_report_orchestrator_without_enabled_links(
     orchestrator = OrchestratorReport(
         work_manager=MagicMock(),
         logger=logging.getLogger(__name__),
-        config=MagicMock(ioc_link_to_threats=False),
+        config=MagicMock(
+            ioc_link_to_threats=False, intrusion_set_link_to_capabilities=False
+        ),
         tlp_level="white",
     )
     report = SimpleNamespace(type="report", id="report--1", object_refs=[])

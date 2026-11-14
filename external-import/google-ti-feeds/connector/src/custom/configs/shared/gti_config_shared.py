@@ -43,6 +43,13 @@ class GTISharedConfig(GTIBaseConfig):
         "container, not from a GTI attribution, and their number is IOCs times "
         "threats: combine with ioc_import_threshold on large containers.",
     )
+    intrusion_set_link_to_capabilities: bool = Field(
+        default=False,
+        description="Whether to link the intrusion sets of a report or campaign to "
+        "the malware, tools and attack patterns ('uses') and the vulnerabilities "
+        "('targets') of that same report or campaign. These relationships come from "
+        "co-occurrence in the same container, not from a GTI attribution.",
+    )
     extended_descriptions: bool = Field(
         default=False,
         description="Whether to append the GTI details that have no dedicated "

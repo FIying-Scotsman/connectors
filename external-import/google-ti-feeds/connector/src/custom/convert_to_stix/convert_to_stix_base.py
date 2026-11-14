@@ -36,6 +36,14 @@ MAPPER_OPTIONS: dict[str, tuple[str, ...]] = {
 }
 
 
+INTRUSION_SET_CAPABILITY_RELATIONSHIP_TYPES = {
+    ("intrusion-set", "malware"): "uses",
+    ("intrusion-set", "tool"): "uses",
+    ("intrusion-set", "attack-pattern"): "uses",
+    ("intrusion-set", "vulnerability"): "targets",
+}
+
+
 def ioc_threat_relationship_types(
     threat_types: Iterable[str],
 ) -> dict[tuple[str, str], str]:

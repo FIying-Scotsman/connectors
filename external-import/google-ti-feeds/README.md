@@ -314,6 +314,7 @@ IOC options apply to the IOCs (files, domains, URLs, IP addresses) imported by a
 | `GTI_INDICATOR_SCORING` | Strategy used to compute the score of IOC indicators and observables | `threat_score` | `threat_score`, `gti_derived`, `average_detection` |
 | `GTI_IOC_IMPORT_THRESHOLD` | Maximum number of IOCs a report or campaign may reference for its IOCs to be fetched. Above it, the IOC sub-entities (`domains`, `files`, `urls`, `ip_addresses`) of that report or campaign are skipped and a warning is logged; its other sub-entities are still imported. Uses the `counters.iocs` value returned by GTI, so no extra API call is made | unset (disabled) | Integer `>= 1` |
 | `GTI_IOC_LINK_TO_THREATS` | Link the IOCs of a report or campaign to the intrusion sets and malware of that same report or campaign (and to its campaigns, for reports). See below | `false` | `true` / `false` |
+| `GTI_INTRUSION_SET_LINK_TO_CAPABILITIES` | Link the intrusion sets of a report or campaign to the malware, tools, attack patterns and vulnerabilities of that same report or campaign. See below | `false` | `true` / `false` |
 | `GTI_EXTENDED_DESCRIPTIONS` | Append the GTI details that have no dedicated OpenCTI field to the descriptions of IOCs, vulnerabilities and malware families. See below. Can overwrite descriptions edited in OpenCTI, depending on the connector confidence level | `false` | `true` / `false` |
 
 Scoring strategies:
@@ -334,6 +335,13 @@ Relationships created by `GTI_IOC_LINK_TO_THREATS`:
 | Observable         | `related-to`      | Intrusion-Set, Malware, Campaign (reports only)     |
 
 These relationships are inferred from the IOC and the threat appearing in the same report or campaign, not from a GTI attribution of the IOC. For reports, they are also added to the report `object_refs`. Their number is the number of IOCs times the number of threats, so set `GTI_IOC_IMPORT_THRESHOLD` when importing large reports or campaigns.
+
+Relationships created by `GTI_INTRUSION_SET_LINK_TO_CAPABILITIES`, also inferred from co-occurrence in the same report or campaign and added to the report `object_refs`:
+
+| STIX Source Object | STIX Relationship | STIX Target Object           |
+|--------------------|-------------------|------------------------------|
+| Intrusion-Set      | `uses`            | Malware, Tool, Attack-Pattern |
+| Intrusion-Set      | `targets`         | Vulnerability                |
 
 Details appended by `GTI_EXTENDED_DESCRIPTIONS`, as Markdown bullet lists after the GTI description, leaving out the fields GTI does not return:
 

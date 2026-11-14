@@ -7,6 +7,7 @@ from connector.src.custom.client_api.client_api import ClientAPI
 from connector.src.custom.configs import GTIConfig
 from connector.src.custom.configs.gti_config_common import IOC_SUBENTITY_TYPES
 from connector.src.custom.convert_to_stix.convert_to_stix_base import (
+    INTRUSION_SET_CAPABILITY_RELATIONSHIP_TYPES,
     ioc_threat_relationship_types,
 )
 from connector.src.octi.work_manager import WorkManager
@@ -213,4 +214,6 @@ class BaseOrchestrator:
         relationship_types: dict[tuple[str, str], str] = {}
         if self.config.ioc_link_to_threats:
             relationship_types |= ioc_threat_relationship_types(ioc_threat_types)
+        if self.config.intrusion_set_link_to_capabilities:
+            relationship_types |= INTRUSION_SET_CAPABILITY_RELATIONSHIP_TYPES
         return relationship_types
