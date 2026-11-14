@@ -64,7 +64,7 @@ class GTIReportToSTIXReport(BaseMapper):
             if hasattr(self, "author_identity") and self.author_identity
             else self.organization.id
         )
-        html_content = markdown_to_html(attributes.content)
+        html_content = self._build_content(attributes)
 
         report = OctiReportModel.create(
             name=name,
@@ -179,6 +179,21 @@ class GTIReportToSTIXReport(BaseMapper):
         if attributes.report_type is None:
             return ReportTypeOV("unknown")
         return ReportTypeOV(attributes.report_type)
+
+    @staticmethod
+    def _build_content(attributes: ReportModel) -> str:
+        """Return the report content as HTML, after the GTI executive summary if any.
+
+        The analyst comment is left out: it is imported as a note.
+        """
+        content = markdown_to_html(attributes.content)
+        summary = markdown_to_html(attributes.executive_summary)
+        if not summary:
+            return content
+        sections = [f"<h1>Executive Summary</h1>\n{summary}"]
+        if content:
+            sections.append(f"<h1>Report Content</h1>\n{content}")
+        return "\n\n".join(sections)
 
     @staticmethod
     def add_object_refs(objects_to_add: list[str], existing_report: Report) -> Report:
