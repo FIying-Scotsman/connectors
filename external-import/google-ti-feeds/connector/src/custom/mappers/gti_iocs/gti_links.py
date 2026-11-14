@@ -1,12 +1,22 @@
-"""External reference to the GTI page of an IOC."""
+"""Links to GTI pages."""
 
-# GTI IOC type -> (display label, GUI path segment)
+GTI_GUI_URL = "https://www.virustotal.com/gui"
+
+# GTI object type -> (display label, GUI path segment)
 GTI_GUI_PATHS = {
+    "collection": ("Collection", "collection"),
     "file": ("File", "file"),
     "domain": ("Domain", "domain"),
     "ip_address": ("IP", "ip-address"),
     "url": ("URL", "url"),
 }
+
+
+def gti_gui_url(object_type: str | None, object_id: str | None) -> str | None:
+    """Return the GTI page of an object, or None for an unknown type or no id."""
+    if not object_id or object_type not in GTI_GUI_PATHS:
+        return None
+    return f"{GTI_GUI_URL}/{GTI_GUI_PATHS[object_type][1]}/{object_id}"
 
 
 def gti_external_reference(
@@ -27,5 +37,5 @@ def gti_external_reference(
     return {
         "source_name": f"[GTI] {label} {name or ioc_id}",
         "description": f"Google Threat Intelligence {label} Link",
-        "url": f"https://www.virustotal.com/gui/{path}/{ioc_id}",
+        "url": f"{GTI_GUI_URL}/{path}/{ioc_id}",
     }

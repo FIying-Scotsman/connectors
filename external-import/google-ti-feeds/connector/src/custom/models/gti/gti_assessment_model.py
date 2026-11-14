@@ -138,6 +138,38 @@ class ContributingFactors(BaseModel):
     )
 
 
+class DescriptionCardTarget(BaseModel):
+    """GTI object a description card links to."""
+
+    object_type: str | None = Field(
+        None, description="GTI object type (e.g., 'collection', 'file')."
+    )
+    id: str | None = Field(None, description="GTI object identifier.")
+
+
+class DescriptionCardLink(BaseModel):
+    """Link from a description card to a related GTI object."""
+
+    title: str | None = Field(None, description="Display text of the link.")
+    url: DescriptionCardTarget | None = Field(None, description="Link target.")
+
+
+class DescriptionCard(BaseModel):
+    """GTI explanation card for one factor of the verdict."""
+
+    influence: str | None = Field(
+        None, description="Influence on the verdict: high, medium, low or benign."
+    )
+    title: str | None = Field(None, description="Factor summary.")
+    sub_title: str | None = Field(None, description="Factor details, may be empty.")
+    collection_type: str | None = Field(
+        None, description="Related collection type (e.g., 'threat-actor')."
+    )
+    related_links: list[DescriptionCardLink] | None = Field(
+        None, description="Related GTI objects."
+    )
+
+
 class GTIAssessment(BaseModel):
     """GTI assessment of an IOC."""
 
@@ -153,6 +185,10 @@ class GTIAssessment(BaseModel):
     )
     description: str | None = Field(
         None, description="Human-readable description of the assessment factors."
+    )
+    gti_description_cards: dict[str, list[DescriptionCard]] | None = Field(
+        None,
+        description="Explanation cards by category (e.g., 'HIGHEST_IMPACT_FACTOR').",
     )
 
 

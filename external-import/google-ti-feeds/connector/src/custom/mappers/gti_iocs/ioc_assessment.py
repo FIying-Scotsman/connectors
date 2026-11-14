@@ -7,6 +7,7 @@ from connector.src.custom.mappers.description_details import (
     details_section,
     join_sections,
 )
+from connector.src.custom.mappers.gti_iocs.gti_links import gti_gui_url
 
 # Boolean contributing factors, in display order. Fields missing on an IOC type are skipped.
 CONTRIBUTING_FACTOR_LABELS = {
@@ -61,8 +62,51 @@ def _contributing_factors(factors: Any) -> list[str]:
     return lines
 
 
+def _card_links(card: Any) -> str | None:
+    """Return the related links of a card, as Markdown links to GTI when possible."""
+    links = []
+    for link in getattr(card, "related_links", None) or []:
+        target = getattr(link, "url", None)
+        title = getattr(link, "title", None) or getattr(target, "id", None)
+        if not title:
+            continue
+        url = gti_gui_url(
+            getattr(target, "object_type", None), getattr(target, "id", None)
+        )
+        links.append(f"[{title}]({url})" if url else title)
+    return ", ".join(links) or None
+
+
+def _card_line(card: Any) -> str | None:
+    """Return 'title: sub title (influence influence). Related: links'."""
+    title = getattr(card, "title", None)
+    if not title:
+        return None
+    line = str(title)
+    if sub_title := getattr(card, "sub_title", None):
+        line += f": {sub_title}"
+    if influence := getattr(card, "influence", None):
+        line += f" ({influence} influence)"
+    if links := _card_links(card):
+        line += f". Related: {links}"
+    return line
+
+
+def _description_cards(cards: Any) -> list[str | None]:
+    """Return one bullet section per card category, in GTI order."""
+    return [
+        bullet_section(
+            _humanize(category, "") or category,
+            filter(None, (_card_line(card) for card in category_cards or [])),
+        )
+        for category, category_cards in (cards or {}).items()
+    ]
+
+
 def build_assessment_description(gti_assessment: Any) -> str | None:
     """Build a Markdown summary of the verdict, severity, score and their reasons.
+
+    Order: GTI summary, explanation cards, assessment details, contributing factors.
 
     Args:
         gti_assessment: GTI assessment of a collection IOC or an IOC delta entry.
@@ -78,6 +122,8 @@ def build_assessment_description(gti_assessment: Any) -> str | None:
     severity = getattr(gti_assessment, "severity", None)
     threat_score = getattr(gti_assessment, "threat_score", None)
     return join_sections(
+        getattr(gti_assessment, "description", None),
+        *_description_cards(getattr(gti_assessment, "gti_description_cards", None)),
         details_section(
             "GTI assessment",
             {
@@ -86,7 +132,6 @@ def build_assessment_description(gti_assessment: Any) -> str | None:
                 "Threat score": getattr(threat_score, "value", None),
             },
         ),
-        getattr(gti_assessment, "description", None),
         bullet_section(
             "Contributing factors",
             _contributing_factors(

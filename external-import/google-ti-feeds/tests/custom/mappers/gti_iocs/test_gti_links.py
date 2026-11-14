@@ -8,7 +8,10 @@ import pytest
 from connector.src.custom.convert_to_stix.report.convert_to_stix_report import (
     ConvertToSTIXReport,
 )
-from connector.src.custom.mappers.gti_iocs.gti_links import gti_external_reference
+from connector.src.custom.mappers.gti_iocs.gti_links import (
+    gti_external_reference,
+    gti_gui_url,
+)
 from connector.src.custom.models.gti.gti_domain_model import GTIDomainData
 from connector.src.custom.models.gti.gti_file_model import GTIFileData
 from connector.src.custom.models.gti.gti_ip_addresses_model import GTIIPData
@@ -109,3 +112,23 @@ def test_collection_indicators_link_to_gti(
     assert [ref.url for ref in indicator.external_references] == [  # noqa: S101
         expected_url
     ]
+
+
+@pytest.mark.parametrize(
+    "object_type, object_id, expected",
+    [
+        ("collection", "apt1", "https://www.virustotal.com/gui/collection/apt1"),
+        ("ip_address", "1.2.3.4", "https://www.virustotal.com/gui/ip-address/1.2.3.4"),
+        ("unknown", "x", None),
+        ("file", None, None),
+        (None, "x", None),
+    ],
+)
+def test_gti_gui_url(
+    object_type: str | None, object_id: str | None, expected: str | None
+) -> None:
+    """Known object types link to their GTI page."""
+    # Given a GTI object type and id
+    # When the GTI URL is built
+    # Then it matches the GUI path, or is None
+    assert gti_gui_url(object_type, object_id) == expected  # noqa: S101

@@ -19,6 +19,9 @@ from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
 )
 from connector.src.custom.models.gti.gti_assessment_model import (
     ContributingFactors,
+    DescriptionCard,
+    DescriptionCardLink,
+    DescriptionCardTarget,
     GTIAssessment,
     Severity,
     ThreatScore,
@@ -34,13 +37,21 @@ from connector.src.custom.models.gti.gti_ioc_delta_model import (
 )
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
 
-FULL_DESCRIPTION = """**GTI assessment**
+FULL_DESCRIPTION = """Detected by Mandiant analysts.
+
+**Highest impact factor**
+
+- Attributed to Mandiant Threat Actor (high influence). Related: [APT1](https://www.virustotal.com/gui/collection/apt1), Unlinked
+
+**Technical evidence**
+
+- Multi-Engine AV Detections: 24: Engines flagging the file (medium influence)
+
+**GTI assessment**
 
 - Verdict: Malicious
 - Severity: High
 - Threat score: 92
-
-Detected by Mandiant analysts.
 
 **Contributing factors**
 
@@ -58,6 +69,37 @@ def assessment() -> GTIAssessment:
         severity=Severity(value="SEVERITY_HIGH"),
         threat_score=ThreatScore(value=92),
         description="Detected by Mandiant analysts.",
+        gti_description_cards={
+            "HIGHEST_IMPACT_FACTOR": [
+                DescriptionCard(
+                    influence="high",
+                    title="Attributed to Mandiant Threat Actor",
+                    sub_title="",
+                    collection_type="threat-actor",
+                    related_links=[
+                        DescriptionCardLink(
+                            title="APT1",
+                            url=DescriptionCardTarget(
+                                object_type="collection", id="apt1"
+                            ),
+                        ),
+                        DescriptionCardLink(
+                            title="Unlinked",
+                            url=DescriptionCardTarget(object_type="unknown", id="x"),
+                        ),
+                    ],
+                )
+            ],
+            "TECHNICAL_EVIDENCE": [
+                DescriptionCard(
+                    influence="medium",
+                    title="Multi-Engine AV Detections: 24",
+                    sub_title="Engines flagging the file",
+                ),
+                DescriptionCard(influence="low"),
+            ],
+            "EMPTY_CATEGORY": [],
+        },
         contributing_factors=ContributingFactors(
             mandiant_analyst_malicious=True,
             mandiant_association_actor=True,
@@ -96,7 +138,7 @@ def _domain_mapper(
 
 
 def test_build_assessment_description(assessment: GTIAssessment) -> None:
-    """Verdict, severity, score, GTI summary and true factors are listed."""
+    """GTI summary, cards, verdict, severity, score and true factors are listed."""
     # Given a full GTI assessment
     # When the description is built
     description = build_assessment_description(assessment)
@@ -212,6 +254,17 @@ def test_ioc_delta_description_includes_summary_and_factors() -> None:
                     "verdict": {"value": "VERDICT_SUSPICIOUS"},
                     "contributing_factors": {"gti_confidence_score": 79},
                     "description": "This indicator is suspicious.",
+                    "gti_description_cards": {
+                        "MITIGATING_FACTORS": [
+                            {
+                                "influence": "benign",
+                                "title": "Seen in legitimate software",
+                                "sub_title": "",
+                                "collection_type": "",
+                                "related_links": [],
+                            }
+                        ]
+                    },
                 }
             },
         }
@@ -220,7 +273,9 @@ def test_ioc_delta_description_includes_summary_and_factors() -> None:
     description = build_assessment_description(entry.attributes.gti_assessment)
     # Then every section is present
     assert description == (  # noqa: S101
-        "**GTI assessment**\n\n- Verdict: Suspicious\n\n"
         "This indicator is suspicious.\n\n"
+        "**Mitigating factors**\n\n"
+        "- Seen in legitimate software (benign influence)\n\n"
+        "**GTI assessment**\n\n- Verdict: Suspicious\n\n"
         "**Contributing factors**\n\n- GTI confidence score: 79"
     )
