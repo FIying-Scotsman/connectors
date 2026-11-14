@@ -277,6 +277,8 @@ Fetches **Indicators** via the GTI **IOC Delta feed API**. The IOC Delta feed is
 
 Unlike the other collections which use the `/collections` search endpoint, the IOC collection uses a **completely different mechanism**: binary delta packages delivered per hour (`YYYYMMDDHH` package IDs).
 
+An IOC can appear several times in a package: only the entry with the latest `last_modification_date` is imported, as documented by GTI.
+
 **What it produces in OpenCTI per IOC type:**
 
 | IOC type | STIX Observable                          | STIX Indicator | Relationship |

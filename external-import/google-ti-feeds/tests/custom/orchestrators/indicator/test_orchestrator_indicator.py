@@ -164,10 +164,10 @@ def patch_fetch_ioc_delta_package(monkeypatch: Any) -> Any:
 
     async def _fake_fetch_ioc_delta_package(
         self: Any, package_id: str, ioc_type: str
-    ) -> list[IOCDeltaEntry]:
+    ) -> list[dict[str, Any]]:
         """Return the sample IOC delta entries for file type; empty otherwise."""
         if ioc_type == "file":
-            return [SAMPLE_FILE_ENTRY]
+            return [SAMPLE_FILE_ENTRY.model_dump()]
         return []
 
     monkeypatch.setattr(
