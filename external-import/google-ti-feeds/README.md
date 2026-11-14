@@ -126,6 +126,54 @@ All sub-entities are converted to STIX 2.1 objects and linked to the parent Camp
 | `vulnerabilities`     | Vulnerability           |
 | `software_toolkits`   | Tool                    |
 
+#### Infrastructure relationships
+
+IOC delta entries also embed the infrastructure GTI has seen with each IOC. `GTI_INDICATOR_INFRASTRUCTURE` turns the selected lists into observables linked to the IOC observable, at no API cost. Without it, a delta IOC is an indicator and its threat links:
+
+```
+Indicator "evil-cdn.com" --indicates--> Malware "Emotet"
+```
+
+With `resolutions` and `downloaded` enabled, a domain entry also gives:
+
+```
+Indicator "evil-cdn.com" --indicates--> Malware "Emotet"
+        |
+     based-on (created by OpenCTI from the indicator)
+        v
+Domain "evil-cdn.com" --resolves-to--> IPv4 "185.x.x.x"
+        |
+        +--related-to--> File <sha256>   (downloaded from this domain)
+```
+
+And with `contacted`, a file entry gives:
+
+```
+File <sha256> --related-to--> Domain "c2.example.net"   (contacted)
+              --related-to--> IPv4 "203.0.113.7"         (contacted)
+```
+
+Observable IDs are deterministic, so an IP seen with several IOCs is a single node linking them all in the knowledge graph. With `GTI_RELATIONSHIP_DESCRIPTIONS`, each relationship also quotes the GTI relationship it comes from, e.g. "Stated by GTI: GTI lists a DNS resolution of the domain evil-cdn.com to 185.x.x.x.", which matters most for `related-to`, the type of every link but resolutions.
+
+| Category        | IOC type     | GTI relationship                  | OpenCTI relationship                   |
+|-----------------|--------------|-----------------------------------|----------------------------------------|
+| `resolutions`   | Domain, IP   | `resolutions`                     | Domain `resolves-to` IP                |
+| `subdomains`    | Domain       | `subdomains`                      | Domain `related-to` subdomain          |
+| `siblings`      | Domain       | `siblings`                        | Domain `related-to` sibling domain     |
+| `downloaded`    | Domain, IP   | `downloaded_files`                | Domain/IP `related-to` File            |
+| `communicating` | Domain, IP   | `communicating_files`             | File `related-to` Domain/IP            |
+| `referrer`      | Domain, IP   | `referrer_files`                  | File `related-to` Domain/IP            |
+| `contacted`     | File         | `contacted_domains`, `contacted_ips` | File `related-to` Domain/IP         |
+| `embedded`      | File         | `embedded_domains`, `embedded_ips` | File `related-to` Domain/IP           |
+| `serving_ip`    | URL          | `last_serving_ip_address`         | URL `related-to` IP                    |
+
+Things to know:
+
+- The linked observables come as bare GTI identifiers, with no verdict: they are context, not indicators, and get no score.
+- Shared hosting links unrelated domains through the same IPs: keep `GTI_INDICATOR_INFRASTRUCTURE_LIMIT` low, and prefer `contacted`, `downloaded`, `resolutions` and `serving_ip` over the weaker `embedded` and `referrer`.
+- URL lists (`urls`, `contacted_urls`, `itw_urls`, `embedded_urls`) are not imported: their items are GTI URL identifiers, not URLs.
+- Each list is deduplicated and capped per entry. The volume grows with entries times links: with 10 links per entry, a package of 5,000 IOCs can add 100,000 objects.
+
 
 #### Configurable filters
 
@@ -306,6 +354,8 @@ An IOC can appear several times in a package: only the entry with the latest `la
 | `GTI_INDICATOR_REQUIRE_MALWARE_FAMILY` | Only import indicators associated with at least one Malware Family           | `false`                            | `true` / `false`                                                                                                             |
 | `GTI_INDICATOR_REQUIRE_THREAT_ACTOR`   | Only import indicators associated with at least one Threat Actor             | `false`                            | `true` / `false`                                                                                                             |
 | `GTI_INDICATOR_SUBENTITIES`       | Comma-separated list of sub-entity types to link to each indicator. Does not change API quota usage. An empty value imports the indicators without any relationship. | `["malware_families", "threat_actors", "software_toolkits"]` | `malware_families`, `threat_actors`, `software_toolkits`, `attack_techniques` |
+| `GTI_INDICATOR_INFRASTRUCTURE`    | Comma-separated list of infrastructure relationships of the delta entries to import as linked observables. Does not change API quota usage. See [Infrastructure relationships](#infrastructure-relationships) | `[]` (disabled) | `resolutions`, `subdomains`, `siblings`, `downloaded`, `communicating`, `contacted`, `serving_ip`, `embedded`, `referrer` |
+| `GTI_INDICATOR_INFRASTRUCTURE_LIMIT` | Maximum number of observables per infrastructure relationship list of an entry | `10` | Integer `>= 1` |
 
 ### Options shared by all collections
 

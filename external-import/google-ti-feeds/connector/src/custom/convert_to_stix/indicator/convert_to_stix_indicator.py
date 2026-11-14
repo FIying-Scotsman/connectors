@@ -10,6 +10,11 @@ from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_ioc_description,
     ioc_tag_labels,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_infrastructure import (
+    INFRASTRUCTURE_RULES,
+    InfrastructureRule,
+    related_value,
+)
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
     compute_ioc_score,
     meets_min_verdict,
@@ -25,11 +30,16 @@ from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaRelationshipItem,
 )
 from connectors_sdk.models import (
+    URL,
     AttackPattern,
     Campaign,
+    DomainName,
     ExternalReference,
+    File,
     Indicator,
     IntrusionSet,
+    IPV4Address,
+    IPV6Address,
     Malware,
     Relationship,
     Tool,
@@ -208,6 +218,8 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             return []
 
         rel_objects = self._build_relationships(entry, ioc_entry)
+        if rel_objects:
+            rel_objects.extend(self._build_infrastructure(entry))
 
         return rel_objects
 
@@ -393,6 +405,109 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
                 rels.extend(rel_func(ioc_entry, item))
 
         return rels
+
+    def _build_infrastructure(self, entry: IOCDeltaEntry) -> list[_STIXBase]:
+        """Return the infrastructure observables of the entry, linked to the IOC observable.
+
+        Enabled by indicator_infrastructure. The IOC observable is sent with them:
+        OpenCTI also creates it from the indicator, with the same ID.
+        """
+        categories = set(getattr(self.config, "indicator_infrastructure", None) or [])
+        rules = [
+            rule
+            for rule in INFRASTRUCTURE_RULES
+            if rule.category in categories and rule.ioc_type == entry.type
+        ]
+        if not rules or entry.relationships is None:
+            return []
+        ioc_value = self._ioc_value(entry)
+        ioc_observable = self._ioc_observable(entry) if ioc_value else None
+        if ioc_value is None or ioc_observable is None:
+            return []
+
+        objects: list[_STIXBase] = []
+        for rule in rules:
+            for value in self._related_values(rule, entry, ioc_value):
+                related = self._observable(rule.related_type, value)
+                source, target = (
+                    (ioc_observable, related)
+                    if rule.ioc_is_source
+                    else (related, ioc_observable)
+                )
+                relationship = Relationship(
+                    type=RelationshipType(rule.relationship_type),
+                    source=source,
+                    target=target,
+                    author=self.organization,
+                    markings=[self.tlp_marking],
+                    description=optional_reason(
+                        "Stated by GTI: "
+                        + rule.reason.format(ioc=ioc_value, related=value)
+                    ),
+                )
+                objects.extend(
+                    [related.to_stix2_object(), relationship.to_stix2_object()]
+                )
+        if objects:
+            objects.insert(0, ioc_observable.to_stix2_object())
+        return objects
+
+    def _related_values(
+        self, rule: InfrastructureRule, entry: IOCDeltaEntry, ioc_value: str
+    ) -> list[str]:
+        """Return the valid related values of a rule, deduplicated and capped."""
+        data = getattr(entry.relationships, rule.field, None)
+        values = (
+            related_value(rule, ioc_value, item.id or "")
+            for item in (data.data if data else [])
+        )
+        unique_values = list(dict.fromkeys(value for value in values if value))
+        return unique_values[: self.config.indicator_infrastructure_limit]
+
+    @staticmethod
+    def _ioc_value(entry: IOCDeltaEntry) -> str | None:
+        """Return the value identifying the IOC in relationship descriptions."""
+        if entry.type == "url":
+            return entry.attributes.url if entry.attributes else None
+        return entry.id
+
+    def _ioc_observable(self, entry: IOCDeltaEntry) -> Any | None:
+        """Return the observable of the IOC itself, as created from its indicator."""
+        attrs = entry.attributes
+        if entry.type == "file":
+            hashes = {
+                algorithm: value
+                for algorithm, value in (
+                    (HashAlgorithm.SHA256, attrs.sha256 if attrs else None),
+                    (HashAlgorithm.MD5, attrs.md5 if attrs else None),
+                    (HashAlgorithm.SHA1, attrs.sha1 if attrs else None),
+                )
+                if value
+            }
+            if not hashes:
+                return None
+            return File(
+                hashes=hashes, author=self.organization, markings=[self.tlp_marking]
+            )
+        if entry.type == "url":
+            if not attrs or not attrs.url:
+                return None
+            return URL(
+                value=attrs.url, author=self.organization, markings=[self.tlp_marking]
+            )
+        kind = "ip" if entry.type == "ip_address" else "domain"
+        return self._observable(kind, entry.id)
+
+    def _observable(self, kind: str, value: str) -> Any:
+        """Return a domain, IP or file (SHA-256) observable."""
+        common = {"author": self.organization, "markings": [self.tlp_marking]}
+        if kind == "file":
+            return File(hashes={HashAlgorithm.SHA256: value}, **common)
+        if kind == "ip":
+            if self._detect_ip_version(value) == "ipv4":
+                return IPV4Address(value=value, **common)
+            return IPV6Address(value=value, **common)
+        return DomainName(value=value, **common)
 
     def _indicates(self, ioc_entry: Indicator, target: Any) -> list[_STIXBase]:
         """Return the target and the 'indicates' relationship from the IOC to it.

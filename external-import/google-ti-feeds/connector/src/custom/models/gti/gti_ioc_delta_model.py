@@ -1,7 +1,9 @@
 """Pydantic models for GTI IOC delta NDJSON format."""
 
+from typing import Any
+
 from connector.src.custom.models.gti.gti_assessment_model import GTIAssessment
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class IOCDeltaRelationshipItemAttributes(BaseModel):
@@ -18,6 +20,14 @@ class IOCDeltaRelationshipItem(BaseModel):
 class IOCDeltaRelationshipData(BaseModel):
     data: list[IOCDeltaRelationshipItem] = Field(default_factory=list)
 
+    @field_validator("data", mode="before")
+    @classmethod
+    def _as_list(cls, value: Any) -> Any:
+        """Accept to-one relationships (an object) and missing data (None)."""
+        if isinstance(value, dict):
+            return [value]
+        return value if isinstance(value, list) else []
+
 
 class IOCDeltaRelationships(BaseModel):
     malware_families: IOCDeltaRelationshipData | None = Field(None)
@@ -27,6 +37,18 @@ class IOCDeltaRelationships(BaseModel):
     software_toolkits: IOCDeltaRelationshipData | None = Field(None)
     vulnerabilities: IOCDeltaRelationshipData | None = Field(None)
     attack_techniques: IOCDeltaRelationshipData | None = Field(None)
+    # Infrastructure, see GTI_INDICATOR_INFRASTRUCTURE
+    resolutions: IOCDeltaRelationshipData | None = Field(None)
+    subdomains: IOCDeltaRelationshipData | None = Field(None)
+    siblings: IOCDeltaRelationshipData | None = Field(None)
+    downloaded_files: IOCDeltaRelationshipData | None = Field(None)
+    communicating_files: IOCDeltaRelationshipData | None = Field(None)
+    referrer_files: IOCDeltaRelationshipData | None = Field(None)
+    contacted_domains: IOCDeltaRelationshipData | None = Field(None)
+    contacted_ips: IOCDeltaRelationshipData | None = Field(None)
+    embedded_domains: IOCDeltaRelationshipData | None = Field(None)
+    embedded_ips: IOCDeltaRelationshipData | None = Field(None)
+    last_serving_ip_address: IOCDeltaRelationshipData | None = Field(None)
 
 
 class IOCDeltaAttributes(BaseModel):

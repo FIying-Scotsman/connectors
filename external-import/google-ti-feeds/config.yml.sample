@@ -14,6 +14,8 @@ gti:
   # indicator_min_score: 50
   # indicator_require_malware_family: false
   # indicator_require_threat_actor: false
+  # indicator_infrastructure: resolutions,contacted,downloaded,serving_ip
+  # indicator_infrastructure_limit: 10
   # indicator_scoring: threat_score
   # indicator_min_verdict: any
   # ioc_tags_as_labels: false

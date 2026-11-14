@@ -217,6 +217,24 @@
       },
       "type": "array"
     },
+    "GTI_INDICATOR_INFRASTRUCTURE": {
+      "default": [],
+      "description": "Comma-separated list of infrastructure relationships of the IOC delta entries to import as observables linked to the IOC observable (described with the GTI relationship when relationship_descriptions is enabled). The delta packages already embed them, so this setting does not change API quota usage. The linked observables have no GTI verdict: they are context, not indicators. resolutions: domain resolves-to IP. subdomains, siblings: related domains. downloaded, communicating, referrer: files downloaded from, communicating with or referencing a domain or IP. contacted, embedded: domains and IPs contacted by or embedded in a file. serving_ip: last IP serving a URL. An empty list imports none. Allowed values: resolutions, subdomains, siblings, downloaded, communicating, contacted, serving_ip, embedded, referrer",
+      "examples": [
+        "resolutions,contacted,downloaded,serving_ip",
+        ""
+      ],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "GTI_INDICATOR_INFRASTRUCTURE_LIMIT": {
+      "default": 10,
+      "description": "Maximum number of observables imported per infrastructure relationship list of an IOC delta entry (see indicator_infrastructure).",
+      "minimum": 1,
+      "type": "integer"
+    },
     "GTI_IMPORT_CAMPAIGNS": {
       "default": false,
       "description": "Whether to enable importing campaign data from GTI",

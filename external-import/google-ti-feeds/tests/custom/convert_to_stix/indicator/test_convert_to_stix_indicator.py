@@ -49,6 +49,8 @@ class DummyConfig:
         self.indicator_scoring = "threat_score"
         self.indicator_min_verdict = "any"
         self.ioc_tags_as_labels = False
+        self.indicator_infrastructure = []
+        self.indicator_infrastructure_limit = 10
         self.extended_descriptions = False
         self.indicator_subentities = [
             "malware_families",
