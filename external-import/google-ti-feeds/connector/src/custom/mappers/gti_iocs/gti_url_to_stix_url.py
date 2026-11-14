@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from connector.src.custom.mappers.gti_iocs.base_ioc_mapper import BaseIOCMapper
+from connector.src.custom.mappers.gti_iocs.stix_pattern import escape_pattern_value
 from connector.src.custom.models.gti.gti_url_model import (
     GTIURLData,
 )
@@ -91,7 +92,7 @@ class GTIUrlToSTIXUrl(BaseIOCMapper[GTIURLData]):
 
         """
         url_value = self._get_url_value()
-        return f"[url:value = '{url_value}']"
+        return f"[url:value = '{escape_pattern_value(url_value)}']"
 
     def _observable_type(self) -> ObservableTypeOV:
         """Return the main observable type of the indicator."""

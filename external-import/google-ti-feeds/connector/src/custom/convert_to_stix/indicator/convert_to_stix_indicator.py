@@ -10,6 +10,7 @@ from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_assessment_description,
 )
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
+from connector.src.custom.mappers.gti_iocs.stix_pattern import escape_pattern_value
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaAttributes,
     IOCDeltaEntry,
@@ -301,7 +302,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
 
         return Indicator(
             name=attrs.url,
-            pattern=f"[url:value = '{attrs.url}']",
+            pattern=f"[url:value = '{escape_pattern_value(attrs.url)}']",
             pattern_type="stix",
             main_observable_type="Url",
             author=self.organization,
@@ -327,7 +328,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
 
         return Indicator(
             name=entry.id,
-            pattern=f"[domain-name:value = '{entry.id}']",
+            pattern=f"[domain-name:value = '{escape_pattern_value(entry.id)}']",
             pattern_type="stix",
             main_observable_type="Domain-Name",
             author=self.organization,

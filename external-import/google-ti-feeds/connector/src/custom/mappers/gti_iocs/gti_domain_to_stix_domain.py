@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from connector.src.custom.mappers.gti_iocs.base_ioc_mapper import BaseIOCMapper
+from connector.src.custom.mappers.gti_iocs.stix_pattern import escape_pattern_value
 from connector.src.custom.models.gti.gti_domain_model import (
     GTIDomainData,
 )
@@ -68,4 +69,4 @@ class GTIDomainToSTIXDomain(BaseIOCMapper[GTIDomainData]):
 
     def _build_stix_pattern(self) -> str:
         """Build STIX pattern for the domain indicator."""
-        return f"[domain-name:value='{self.domain.id}']"
+        return f"[domain-name:value='{escape_pattern_value(self.domain.id)}']"
