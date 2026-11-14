@@ -10,6 +10,7 @@ from connector.src.custom.configs.gti_config_common import GTIBaseConfig
 from pydantic import Field
 
 IndicatorScoring = Literal["threat_score", "gti_derived", "average_detection"]
+IndicatorMinVerdict = Literal["any", "suspicious", "malicious"]
 
 
 class GTISharedConfig(GTIBaseConfig):
@@ -24,6 +25,14 @@ class GTISharedConfig(GTIBaseConfig):
         "'average_detection': computed from the share of AV engines flagging the "
         "IOC (last_analysis_stats). When the selected strategy has no data for an "
         "IOC, 'threat_score' is used.",
+    )
+    indicator_min_verdict: IndicatorMinVerdict = Field(
+        default="any",
+        description="Lowest GTI verdict for which an IOC gets an indicator. 'any': "
+        "every IOC. 'suspicious': suspicious and malicious IOCs. 'malicious': "
+        "malicious IOCs only. IOCs below it, or without a verdict, are imported as "
+        "observables only, and are skipped by the IOC deltas feed, which only "
+        "imports indicators.",
     )
     ioc_import_threshold: int | None = Field(
         default=None,

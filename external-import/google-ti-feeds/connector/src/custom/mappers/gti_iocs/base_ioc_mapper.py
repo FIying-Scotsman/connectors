@@ -12,7 +12,10 @@ from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_assessment_description,
     observable_description_properties,
 )
-from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
+    compute_ioc_score,
+    meets_min_verdict,
+)
 from connector.src.stix.octi.models.indicator_model import OctiIndicatorModel
 from connector.src.stix.octi.models.relationship_model import OctiRelationshipModel
 from connector.src.stix.octi.observable_type_ov_enum import ObservableTypeOV
@@ -86,6 +89,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         tlp_marking: TLPMarking,
         indicator_scoring: str = "threat_score",
         extended_descriptions: bool = False,
+        indicator_min_verdict: str = "any",
     ) -> None:
         """Initialize the mapper.
 
@@ -95,6 +99,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
             tlp_marking: The TLP marking of the objects.
             indicator_scoring: Score strategy, see `compute_ioc_score`.
             extended_descriptions: Whether to describe the GTI assessment.
+            indicator_min_verdict: Lowest verdict creating an indicator, see `meets_min_verdict`.
 
         """
         self.ioc = ioc
@@ -102,6 +107,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         self.tlp_marking = tlp_marking
         self.indicator_scoring = indicator_scoring
         self.extended_descriptions = extended_descriptions
+        self.indicator_min_verdict = indicator_min_verdict
 
     @abstractmethod
     def _create_stix_observable(self) -> Any:
@@ -127,10 +133,13 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         """Convert the GTI IOC to STIX objects.
 
         Returns:
-            list[Any]: The observable, the indicator and their relationship.
+            list[Any]: The observable, the indicator and their relationship, or
+                the observable alone when the verdict is below `indicator_min_verdict`.
 
         """
         observable = self._create_stix_observable()
+        if not meets_min_verdict(self.ioc.attributes, self.indicator_min_verdict):
+            return [observable]
         indicator = self._create_stix_indicator()
         return [observable, indicator, self._create_based_on(indicator, observable)]
 

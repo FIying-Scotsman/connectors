@@ -31,7 +31,8 @@ MAPPER_OPTIONS: dict[str, tuple[str, ...]] = {
     "threat_actors": ("enable_threat_actor_aliases",),
     "vulnerabilities": ("extended_descriptions",),
     **dict.fromkeys(
-        IOC_SUBENTITY_TYPES, ("indicator_scoring", "extended_descriptions")
+        IOC_SUBENTITY_TYPES,
+        ("indicator_scoring", "indicator_min_verdict", "extended_descriptions"),
     ),
 }
 

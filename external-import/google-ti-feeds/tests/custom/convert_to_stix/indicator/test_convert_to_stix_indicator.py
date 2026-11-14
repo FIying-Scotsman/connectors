@@ -47,6 +47,7 @@ class DummyConfig:
         self.indicator_require_malware_family = False
         self.indicator_require_threat_actor = False
         self.indicator_scoring = "threat_score"
+        self.indicator_min_verdict = "any"
         self.extended_descriptions = False
         self.indicator_subentities = [
             "malware_families",

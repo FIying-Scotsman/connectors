@@ -9,7 +9,10 @@ from connector.src.custom.mappers.gti_iocs.gti_links import gti_external_referen
 from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_assessment_description,
 )
-from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
+    compute_ioc_score,
+    meets_min_verdict,
+)
 from connector.src.custom.mappers.gti_iocs.stix_pattern import escape_pattern_value
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaAttributes,
@@ -140,6 +143,18 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
                     "type": entry.type,
                     "id": entry.id,
                     "min_score": self.config.indicator_min_score,
+                },
+            )
+            return []
+
+        if not meets_min_verdict(entry.attributes, self.config.indicator_min_verdict):
+            self.logger.debug(
+                "IOC entry below minimum GTI verdict, skipping",
+                {
+                    "prefix": LOG_PREFIX,
+                    "type": entry.type,
+                    "id": entry.id,
+                    "min_verdict": self.config.indicator_min_verdict,
                 },
             )
             return []

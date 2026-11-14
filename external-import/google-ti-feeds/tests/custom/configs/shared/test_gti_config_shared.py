@@ -44,6 +44,27 @@ def test_indicator_scoring_rejects_unknown_strategy() -> None:
         _load_config({"GTI_INDICATOR_SCORING": "random"})
 
 
+@pytest.mark.parametrize(
+    "env, expected",
+    [({}, "any"), ({"GTI_INDICATOR_MIN_VERDICT": "malicious"}, "malicious")],
+)
+def test_indicator_min_verdict(env: dict[str, str], expected: str) -> None:
+    """The minimum verdict defaults to 'any' and accepts known verdicts."""
+    # Given a configuration with or without a minimum verdict
+    # When it is loaded
+    # Then the minimum verdict is set
+    assert _load_config(env).indicator_min_verdict == expected  # noqa: S101
+
+
+def test_indicator_min_verdict_rejects_unknown_value() -> None:
+    """An unknown verdict fails validation."""
+    # Given an unsupported verdict
+    # When the configuration is loaded
+    # Then validation fails
+    with pytest.raises(ValidationError):
+        _load_config({"GTI_INDICATOR_MIN_VERDICT": "benign"})
+
+
 def test_gti_config_exposes_shared_settings() -> None:
     """The unified GTI configuration includes the shared settings."""
     # Given the unified configuration

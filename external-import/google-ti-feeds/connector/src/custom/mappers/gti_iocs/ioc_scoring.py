@@ -1,4 +1,4 @@
-"""Score computation for GTI IOCs, selected by the `indicator_scoring` setting."""
+"""Score and verdict helpers for GTI IOCs (`indicator_scoring`, `indicator_min_verdict`)."""
 
 from typing import Any
 
@@ -98,3 +98,31 @@ def compute_ioc_score(attributes: Any, strategy: str = "threat_score") -> int | 
     if score is None:
         score = score_from_threat_score(gti_assessment)
     return score
+
+
+# Verdicts creating an indicator, by `indicator_min_verdict` value. Other values: no filter.
+INDICATOR_VERDICTS = {
+    "suspicious": frozenset({"VERDICT_SUSPICIOUS", "VERDICT_MALICIOUS"}),
+    "malicious": frozenset({"VERDICT_MALICIOUS"}),
+}
+
+
+def meets_min_verdict(attributes: Any, min_verdict: str) -> bool:
+    """Return whether the GTI verdict of an IOC is at least `min_verdict`.
+
+    With 'suspicious' or 'malicious', an IOC without a verdict does not qualify.
+
+    Args:
+        attributes: GTI IOC attributes exposing `gti_assessment`.
+        min_verdict: One of `any`, `suspicious`, `malicious`.
+
+    Returns:
+        True when the IOC qualifies for an indicator.
+
+    """
+    accepted = INDICATOR_VERDICTS.get(min_verdict)
+    if accepted is None:
+        return True
+    gti_assessment = getattr(attributes, "gti_assessment", None)
+    verdict = getattr(getattr(gti_assessment, "verdict", None), "value", None)
+    return (verdict or "").upper() in accepted

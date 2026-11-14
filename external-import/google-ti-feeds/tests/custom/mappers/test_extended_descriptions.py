@@ -235,7 +235,11 @@ def test_malware_description_unchanged_by_default(
         ("threat_actors", {"enable_threat_actor_aliases": False}),
         (
             "domains",
-            {"indicator_scoring": "gti_derived", "extended_descriptions": True},
+            {
+                "indicator_scoring": "gti_derived",
+                "indicator_min_verdict": "malicious",
+                "extended_descriptions": True,
+            },
         ),
         ("attack_techniques", {}),
     ],
@@ -247,6 +251,7 @@ def test_mapper_options(entity_type: str, expected: dict[str, Any]) -> None:
         enable_malware_aliases=False,
         enable_threat_actor_aliases=False,
         indicator_scoring="gti_derived",
+        indicator_min_verdict="malicious",
         extended_descriptions=True,
     )
     converter = ConvertToSTIXReport(
