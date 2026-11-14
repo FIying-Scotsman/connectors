@@ -437,7 +437,7 @@ These relationships are **only produced when the Malware Families collection is 
 |--------------------------|--------------------|-------------------|--------------------|
 | `threat_actors`          | Intrusion-Set      | `uses`            | Malware            |
 | `attack_techniques`      | Malware            | `uses`            | Attack-Pattern     |
-| `vulnerabilities`        | Malware            | `targets`         | Vulnerability      |
+| `vulnerabilities`        | Malware            | `exploits`        | Vulnerability      |
 
 ---
 
@@ -572,7 +572,7 @@ These relationships are **only produced when the Vulnerabilities collection is e
 | GTI Concept              | STIX Source Object | STIX Relationship | STIX Target Object |
 |--------------------------|--------------------|-------------------|--------------------|
 | `threat_actors`          | Intrusion-Set      | `targets`         | Vulnerability      |
-| `malware_families`       | Malware            | `targets`         | Vulnerability      |
+| `malware_families`       | Malware            | `exploits`        | Vulnerability      |
 | `attack_techniques`      | Vulnerability      | `related-to`      | Attack-Pattern     |
 
 ---
