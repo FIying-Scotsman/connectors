@@ -43,3 +43,15 @@ class GTISharedConfig(GTIBaseConfig):
         "container, not from a GTI attribution, and their number is IOCs times "
         "threats: combine with ioc_import_threshold on large containers.",
     )
+    extended_descriptions: bool = Field(
+        default=False,
+        description="Whether to append the GTI details that have no dedicated "
+        "OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and "
+        "observables: GTI assessment (verdict, severity, threat score, summary, "
+        "contributing factors). Vulnerabilities: risk rating, exploitation state, "
+        "exploit availability, exploitation consequence and vectors, remediation "
+        "priority, exploitation dates, CISA KEV dates and ransomware use, "
+        "mitigations. Malware families: targeted operating systems and detection "
+        "names. The GTI description is kept and the details follow it. Can overwrite "
+        "descriptions edited in OpenCTI, depending on the connector confidence level.",
+    )

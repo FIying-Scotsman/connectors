@@ -314,6 +314,7 @@ IOC options apply to the IOCs (files, domains, URLs, IP addresses) imported by a
 | `GTI_INDICATOR_SCORING` | Strategy used to compute the score of IOC indicators and observables | `threat_score` | `threat_score`, `gti_derived`, `average_detection` |
 | `GTI_IOC_IMPORT_THRESHOLD` | Maximum number of IOCs a report or campaign may reference for its IOCs to be fetched. Above it, the IOC sub-entities (`domains`, `files`, `urls`, `ip_addresses`) of that report or campaign are skipped and a warning is logged; its other sub-entities are still imported. Uses the `counters.iocs` value returned by GTI, so no extra API call is made | unset (disabled) | Integer `>= 1` |
 | `GTI_IOC_LINK_TO_THREATS` | Link the IOCs of a report or campaign to the intrusion sets and malware of that same report or campaign (and to its campaigns, for reports). See below | `false` | `true` / `false` |
+| `GTI_EXTENDED_DESCRIPTIONS` | Append the GTI details that have no dedicated OpenCTI field to the descriptions of IOCs, vulnerabilities and malware families. See below. Can overwrite descriptions edited in OpenCTI, depending on the connector confidence level | `false` | `true` / `false` |
 
 Scoring strategies:
 
@@ -333,6 +334,17 @@ Relationships created by `GTI_IOC_LINK_TO_THREATS`:
 | Observable         | `related-to`      | Intrusion-Set, Malware, Campaign (reports only)     |
 
 These relationships are inferred from the IOC and the threat appearing in the same report or campaign, not from a GTI attribution of the IOC. For reports, they are also added to the report `object_refs`. Their number is the number of IOCs times the number of threats, so set `GTI_IOC_IMPORT_THRESHOLD` when importing large reports or campaigns.
+
+Details appended by `GTI_EXTENDED_DESCRIPTIONS`, as Markdown bullet lists after the GTI description, leaving out the fields GTI does not return:
+
+| Entity                    | Section                    | GTI source                                                                                                                                                                                                                       |
+|---------------------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Indicator and observable  | GTI assessment             | `gti_assessment.verdict`, `severity`, `threat_score`                                                                                                                                                                             |
+| Indicator and observable  | Summary                    | `gti_assessment.description`                                                                                                                                                                                                     |
+| Indicator and observable  | Contributing factors       | `gti_assessment.contributing_factors`: Mandiant analyst verdict, association with a tracked threat actor, malware family or GTI report, sandbox and YARA detections, related severe files, GTI and Mandiant confidence scores, Safe Browsing verdict... |
+| Vulnerability             | GTI vulnerability details  | `risk_rating` (or `predicted_risk_rating`), `exploitation_state`, `exploit_availability`, `exploitation_consequence`, `exploitation_vectors`, `priority`, `date_of_disclosure`, `exploitation` dates, `cisa_known_exploited` dates and `ransomware_use`, `mve_id` |
+| Vulnerability             | Available mitigations      | `available_mitigation` (workarounds are imported as notes)                                                                                                                                                                       |
+| Malware                   | GTI malware details        | `operating_systems`, `detection_names` (first 10)                                                                                                                                                                                |
 
 ---
 
@@ -646,6 +658,7 @@ For each IOC type, an **Indicator** is created with `create_observables=True`, w
 |------------------------------------------------|-----------------------|-------------------------------------------------|
 | `attributes.creation_date`                     | `valid_from`          | UTC timestamp when the IOC was first seen       |
 | `attributes.gti_assessment`                    | `x_opencti_score`     | Computed with `GTI_INDICATOR_SCORING`           |
+| `attributes.gti_assessment`                    | `description`         | When `GTI_EXTENDED_DESCRIPTIONS` is `true`      |
 | `id`                                           | `external_references` | Link to the GTI page for this IOC               |
 
 #### Relationship mapping

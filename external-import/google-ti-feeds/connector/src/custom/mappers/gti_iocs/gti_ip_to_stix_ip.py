@@ -7,6 +7,10 @@ from typing import Any
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
+    build_assessment_description,
+    observable_description_properties,
+)
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_ip_addresses_model import (
     GTIIPData,
@@ -78,6 +82,7 @@ class GTIIPToSTIXIP(BaseMapper):
         organization: OrganizationAuthor,
         tlp_marking: TLPMarking,
         indicator_scoring: str = "threat_score",
+        extended_descriptions: bool = False,
     ) -> None:
         """Initialize the GTIIPToSTIXIP object.
 
@@ -86,12 +91,14 @@ class GTIIPToSTIXIP(BaseMapper):
         organization (OrganizationAuthor): The organization author object.
         tlp_marking (TLPMarking): The TLP marking object.
         indicator_scoring (str): Score strategy, see `compute_ioc_score`.
+        extended_descriptions (bool): Whether to describe the GTI assessment.
 
         """
         self.ip = ip
         self.organization = organization
         self.tlp_marking = tlp_marking
         self.indicator_scoring = indicator_scoring
+        self.extended_descriptions = extended_descriptions
 
     def _detect_ip_version(self) -> str:
         """Detect if IP is IPv4 or IPv6.
@@ -134,6 +141,9 @@ class GTIIPToSTIXIP(BaseMapper):
                 organization_id=self.organization.id,
                 marking_ids=[self.tlp_marking.id],
                 score=score,
+                custom_properties=observable_description_properties(
+                    self._get_description()
+                ),
                 created=timestamps["created"],
                 modified=timestamps["modified"],
             )
@@ -143,6 +153,9 @@ class GTIIPToSTIXIP(BaseMapper):
                 organization_id=self.organization.id,
                 marking_ids=[self.tlp_marking.id],
                 score=score,
+                custom_properties=observable_description_properties(
+                    self._get_description()
+                ),
                 created=timestamps["created"],
                 modified=timestamps["modified"],
             )
@@ -180,6 +193,7 @@ class GTIIPToSTIXIP(BaseMapper):
             marking_ids=[self.tlp_marking.id],
             indicator_types=indicator_types,
             score=score,
+            description=self._get_description(),
             created=created,
             modified=modified,
         )
@@ -251,6 +265,17 @@ class GTIIPToSTIXIP(BaseMapper):
                 )
 
         return {"created": created, "modified": modified}
+
+    def _get_description(self) -> str | None:
+        """Get the GTI assessment summary when enabled.
+
+        Returns:
+            str | None: The description, None when disabled or empty
+
+        """
+        if not self.extended_descriptions or not self.ip.attributes:
+            return None
+        return build_assessment_description(self.ip.attributes.gti_assessment)
 
     def _get_score(self) -> int | None:
         """Get the score computed with the configured scoring strategy.

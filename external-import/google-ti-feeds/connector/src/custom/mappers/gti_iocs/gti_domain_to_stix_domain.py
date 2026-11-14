@@ -6,6 +6,10 @@ from typing import Any
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
+    build_assessment_description,
+    observable_description_properties,
+)
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_domain_model import (
     GTIDomainData,
@@ -74,6 +78,7 @@ class GTIDomainToSTIXDomain(BaseMapper):
         organization: OrganizationAuthor,
         tlp_marking: TLPMarking,
         indicator_scoring: str = "threat_score",
+        extended_descriptions: bool = False,
     ) -> None:
         """Initialize the GTIDomainToSTIXDomain object.
 
@@ -82,12 +87,14 @@ class GTIDomainToSTIXDomain(BaseMapper):
         organization (OrganizationAuthor): The organization author object.
         tlp_marking (TLPMarking): The TLP marking object.
         indicator_scoring (str): Score strategy, see `compute_ioc_score`.
+        extended_descriptions (bool): Whether to describe the GTI assessment.
 
         """
         self.domain = domain
         self.organization = organization
         self.tlp_marking = tlp_marking
         self.indicator_scoring = indicator_scoring
+        self.extended_descriptions = extended_descriptions
 
     def _create_stix_domain(self) -> DomainName:
         """Create the STIX domain observable object.
@@ -103,6 +110,9 @@ class GTIDomainToSTIXDomain(BaseMapper):
             organization_id=self.organization.id,
             marking_ids=[self.tlp_marking.id],
             score=score,
+            custom_properties=observable_description_properties(
+                self._get_description()
+            ),
         )
 
         return domain_model.to_stix2_object()
@@ -129,6 +139,7 @@ class GTIDomainToSTIXDomain(BaseMapper):
             marking_ids=[self.tlp_marking.id],
             indicator_types=indicator_types,
             score=score,
+            description=self._get_description(),
             created=created,
             modified=created,
         )
@@ -198,6 +209,17 @@ class GTIDomainToSTIXDomain(BaseMapper):
                 )
 
         return {"created": created, "modified": modified}
+
+    def _get_description(self) -> str | None:
+        """Get the GTI assessment summary when enabled.
+
+        Returns:
+            str | None: The description, None when disabled or empty
+
+        """
+        if not self.extended_descriptions or not self.domain.attributes:
+            return None
+        return build_assessment_description(self.domain.attributes.gti_assessment)
 
     def _get_score(self) -> int | None:
         """Get the score computed with the configured scoring strategy.

@@ -17,3 +17,4 @@ gti:
   # indicator_scoring: threat_score
   # ioc_import_threshold: 250
   # ioc_link_to_threats: false
+  # extended_descriptions: false

@@ -25,6 +25,16 @@ LOG_PREFIX = "[BaseConverter]"
 
 IOC_OBSERVABLE_STIX_TYPES = ("domain-name", "file", "url", "ipv4-addr", "ipv6-addr")
 
+# GTIConfig options forwarded to the mappers, by sub-entity type.
+MAPPER_OPTIONS: dict[str, tuple[str, ...]] = {
+    "malware_families": ("enable_malware_aliases", "extended_descriptions"),
+    "threat_actors": ("enable_threat_actor_aliases",),
+    "vulnerabilities": ("extended_descriptions",),
+    **dict.fromkeys(
+        IOC_SUBENTITY_TYPES, ("indicator_scoring", "extended_descriptions")
+    ),
+}
+
 
 def ioc_threat_relationship_types(
     threat_types: Iterable[str],
@@ -79,6 +89,22 @@ class BaseConvertToSTIX:
             )
 
         return factory
+
+    def mapper_options(self, entity_type: str) -> dict[str, Any]:
+        """Return the configuration options forwarded to the mapper of an entity type.
+
+        Args:
+            entity_type: GTI sub-entity type, e.g. 'malware_families'.
+
+        Returns:
+            Mapper keyword arguments, for the options present in the configuration.
+
+        """
+        return {
+            option: getattr(self.config, option)
+            for option in MAPPER_OPTIONS.get(entity_type, ())
+            if hasattr(self.config, option)
+        }
 
     def _create_organization(self) -> OrganizationAuthor:
         """Create the organization identity object.
@@ -161,27 +187,9 @@ class BaseConvertToSTIX:
                 continue
 
             try:
-                # Check if we need to pass additional dependencies for aliases
-                additional_deps = {}
-                if entity_type == "malware_families" and hasattr(
-                    self.config, "enable_malware_aliases"
-                ):
-                    additional_deps["enable_malware_aliases"] = (
-                        self.config.enable_malware_aliases
-                    )
-                elif entity_type == "threat_actors" and hasattr(
-                    self.config, "enable_threat_actor_aliases"
-                ):
-                    additional_deps["enable_threat_actor_aliases"] = (
-                        self.config.enable_threat_actor_aliases
-                    )
-                elif entity_type in IOC_SUBENTITY_TYPES and hasattr(
-                    self.config, "indicator_scoring"
-                ):
-                    additional_deps["indicator_scoring"] = self.config.indicator_scoring
-
                 converter = self.converter_factory.create_converter_by_name(
-                    f"{_prefix}{entity_type}", additional_dependencies=additional_deps
+                    f"{_prefix}{entity_type}",
+                    additional_dependencies=self.mapper_options(entity_type),
                 )
                 stix_entities = converter.convert_multiple(entities)
                 all_stix_entities.extend(stix_entities)

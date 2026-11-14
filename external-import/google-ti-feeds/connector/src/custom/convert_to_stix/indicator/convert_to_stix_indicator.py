@@ -5,6 +5,9 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from connector.src.custom.convert_to_stix.convert_to_stix_base import BaseConvertToSTIX
+from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
+    build_assessment_description,
+)
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaAttributes,
@@ -190,6 +193,12 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
         """Compute the indicator score with the configured scoring strategy."""
         return compute_ioc_score(attrs, self.config.indicator_scoring)
 
+    def _get_description(self, attrs: IOCDeltaAttributes) -> str | None:
+        """Build the GTI assessment description when enabled."""
+        if not self.config.extended_descriptions:
+            return None
+        return build_assessment_description(attrs.gti_assessment)
+
     def _convert_file(self, entry: IOCDeltaEntry) -> Indicator | None:
         """Convert a file IOC delta entry to a STIX Indicator with file observable."""
         attrs = entry.attributes
@@ -221,6 +230,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             author=self.organization,
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
+            description=self._get_description(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -274,6 +284,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             author=self.organization,
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
+            description=self._get_description(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -303,6 +314,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             author=self.organization,
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
+            description=self._get_description(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -332,6 +344,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             author=self.organization,
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
+            description=self._get_description(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date

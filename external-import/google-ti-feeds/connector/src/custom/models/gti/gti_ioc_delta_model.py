@@ -22,6 +22,7 @@ class IOCDeltaGTIAssessment(BaseModel):
     threat_score: IOCDeltaThreatScore | None = Field(None)
     # Same keys as the collection IOCs; the file model holds the superset.
     contributing_factors: ContributingFactors | None = Field(None)
+    description: str | None = Field(None)
 
 
 class IOCDeltaRelationshipItemAttributes(BaseModel):

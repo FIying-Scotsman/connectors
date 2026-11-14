@@ -6,6 +6,10 @@ from typing import Any
 from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
+from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
+    build_assessment_description,
+    observable_description_properties,
+)
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
 from connector.src.custom.models.gti.gti_file_model import (
     GTIFileData,
@@ -74,6 +78,7 @@ class GTIFileToSTIXFile(BaseMapper):
         organization: OrganizationAuthor,
         tlp_marking: TLPMarking,
         indicator_scoring: str = "threat_score",
+        extended_descriptions: bool = False,
     ) -> None:
         """Initialize the GTIFileToSTIXFile object.
 
@@ -82,12 +87,14 @@ class GTIFileToSTIXFile(BaseMapper):
         organization (OrganizationAuthor): The organization identity object.
         tlp_marking (TLPMarking): The TLP marking definition.
         indicator_scoring (str): Score strategy, see `compute_ioc_score`.
+        extended_descriptions (bool): Whether to describe the GTI assessment.
 
         """
         self.file = file
         self.organization = organization
         self.tlp_marking = tlp_marking
         self.indicator_scoring = indicator_scoring
+        self.extended_descriptions = extended_descriptions
 
     def _create_stix_file(self) -> File:
         """Create the STIX file observable object.
@@ -127,6 +134,9 @@ class GTIFileToSTIXFile(BaseMapper):
             additional_names=additional_names,
             size=file_size,
             score=score,
+            custom_properties=observable_description_properties(
+                self._get_description()
+            ),
             ctime=ctime,
         )
 
@@ -157,6 +167,7 @@ class GTIFileToSTIXFile(BaseMapper):
             marking_ids=[self.tlp_marking.id],
             indicator_types=indicator_types,
             score=score,
+            description=self._get_description(),
             created=created,
             modified=modified,
         )
@@ -226,6 +237,17 @@ class GTIFileToSTIXFile(BaseMapper):
                 )
 
         return {"created": created, "modified": modified}
+
+    def _get_description(self) -> str | None:
+        """Get the GTI assessment summary when enabled.
+
+        Returns:
+            str | None: The description, None when disabled or empty
+
+        """
+        if not self.extended_descriptions or not self.file.attributes:
+            return None
+        return build_assessment_description(self.file.attributes.gti_assessment)
 
     def _get_score(self) -> int | None:
         """Get the score computed with the configured scoring strategy.
