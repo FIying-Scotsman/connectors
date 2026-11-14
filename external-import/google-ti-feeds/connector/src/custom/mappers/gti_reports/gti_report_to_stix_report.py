@@ -12,8 +12,8 @@ from connector.src.stix.v21.models.cdts.external_reference_model import (
 )
 from connector.src.stix.v21.models.ovs.report_type_ov_enums import ReportTypeOV
 from connector.src.utils.converters.generic_converter_config import BaseMapper
+from connector.src.utils.markdown_to_html import markdown_to_html
 from connectors_sdk.models import OrganizationAuthor, TLPMarking
-from markdown import markdown  # type: ignore[import-untyped]
 from stix2.v21 import Report
 
 
@@ -64,10 +64,7 @@ class GTIReportToSTIXReport(BaseMapper):
             if hasattr(self, "author_identity") and self.author_identity
             else self.organization.id
         )
-        if hasattr(attributes, "content") and attributes.content is not None:
-            html_content = markdown(attributes.content)
-        else:
-            html_content = ""
+        html_content = markdown_to_html(attributes.content)
 
         report = OctiReportModel.create(
             name=name,
