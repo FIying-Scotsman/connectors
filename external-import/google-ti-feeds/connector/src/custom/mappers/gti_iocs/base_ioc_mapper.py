@@ -17,6 +17,10 @@ from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
     compute_ioc_score,
     meets_min_verdict,
 )
+from connector.src.custom.mappers.relationship_reasons import (
+    gti_collection_id,
+    ioc_threat_evidence,
+)
 from connector.src.stix.octi.models.indicator_model import OctiIndicatorModel
 from connector.src.stix.octi.models.relationship_model import OctiRelationshipModel
 from connector.src.stix.octi.observable_type_ov_enum import ObservableTypeOV
@@ -213,6 +217,17 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         if labels := self._get_labels():
             properties["x_opencti_labels"] = labels
         return properties
+
+    def relationship_evidence(self, context_entity: Any) -> str | None:
+        """Return the GTI evidence of this IOC supporting its link to the context entity."""
+        if not self.ioc.attributes:
+            return None
+        return ioc_threat_evidence(
+            getattr(self.ioc.attributes, "gti_assessment", None),
+            getattr(context_entity, "type", None),
+            getattr(context_entity, "name", None),
+            gti_collection_id(context_entity),
+        )
 
     def _get_labels(self) -> list[str] | None:
         """Return the GTI tags when enabled, deduplicated, or None."""

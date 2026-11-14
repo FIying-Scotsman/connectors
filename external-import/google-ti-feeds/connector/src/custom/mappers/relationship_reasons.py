@@ -8,6 +8,9 @@ description written by an analyst or another source (#5775).
 
 from typing import Any
 
+from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
+    CONTRIBUTING_FACTOR_LABELS,
+)
 from pydantic import BaseModel
 
 # Set by the converters from GTI_RELATIONSHIP_DESCRIPTIONS.
@@ -175,6 +178,77 @@ def targeting_reason(
     if note:
         reason += f" GTI note: {note}"
     return reason
+
+
+# Threat STIX type -> contributing factors of an IOC supporting a link to it.
+EVIDENCE_FACTORS = {
+    "intrusion-set": ("mandiant_association_actor", "associated_actor"),
+    "malware": ("mandiant_association_malware", "associated_malware_configuration"),
+    "report": ("mandiant_association_report",),
+}
+
+
+def gti_collection_id(obj: Any) -> str | None:
+    """Return the GTI collection ID of an object, from its GTI external reference."""
+    for reference in _get(obj, "external_references") or []:
+        url = _get(reference, "url") or ""
+        if "/gui/collection/" in url:
+            return str(url.rsplit("/", 1)[-1]) or None
+    return None
+
+
+def _card_points_to(card: Any, threat_name: str | None, threat_id: str | None) -> bool:
+    """Return whether a GTI explanation card links to the threat, by GTI ID or name."""
+    name = (threat_name or "").casefold()
+    for link in getattr(card, "related_links", None) or []:
+        target = getattr(link, "url", None)
+        if threat_id and getattr(target, "id", None) == threat_id:
+            return True
+        if name and (getattr(link, "title", None) or "").casefold() == name:
+            return True
+    return False
+
+
+def ioc_threat_evidence(
+    gti_assessment: Any,
+    threat_type: str | None,
+    threat_name: str | None,
+    threat_id: str | None,
+) -> str | None:
+    """Return the GTI evidence of an IOC supporting its link to a threat.
+
+    Explanation cards linking to the threat, then the contributing factors
+    supporting a link to that type of threat.
+
+    Args:
+        gti_assessment: GTI assessment of the IOC.
+        threat_type: STIX type of the threat, e.g. 'intrusion-set'.
+        threat_name: Name of the threat, matched to the card link titles.
+        threat_id: GTI collection ID of the threat, matched to the card link IDs.
+
+    Returns:
+        "Evidence: ...", or None when GTI gives none.
+
+    """
+    if gti_assessment is None:
+        return None
+    parts = []
+    for category_cards in (
+        getattr(gti_assessment, "gti_description_cards", None) or {}
+    ).values():
+        for card in category_cards or []:
+            title = getattr(card, "title", None)
+            if title and _card_points_to(card, threat_name, threat_id):
+                influence = getattr(card, "influence", None)
+                parts.append(
+                    f"GTI explanation card '{title}'"
+                    + (f" ({influence} influence)" if influence else "")
+                )
+    factors = getattr(gti_assessment, "contributing_factors", None)
+    for field in EVIDENCE_FACTORS.get(threat_type or "", ()):
+        if getattr(factors, field, None) is True:
+            parts.append(f"contributing factor '{CONTRIBUTING_FACTOR_LABELS[field]}'")
+    return f"Evidence: {'; '.join(parts)}." if parts else None
 
 
 def co_occurrence_reason(source: Any, target: Any, container: Any | None) -> str:

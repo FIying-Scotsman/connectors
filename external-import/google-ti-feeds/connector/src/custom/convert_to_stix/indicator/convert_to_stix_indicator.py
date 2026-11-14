@@ -22,6 +22,7 @@ from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
 from connector.src.custom.mappers.gti_iocs.stix_pattern import escape_pattern_value
 from connector.src.custom.mappers.relationship_reasons import (
     ioc_delta_association_reason,
+    ioc_threat_evidence,
     optional_reason,
 )
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
@@ -53,6 +54,15 @@ if TYPE_CHECKING:
     from connector.src.custom.configs import GTIConfig
 
 LOG_PREFIX = "[ConvertToSTIXIndicator]"
+
+# Delta relationship list -> STIX type of the threat, for the GTI evidence.
+DELTA_THREAT_TYPES = {
+    "malware_families": "malware",
+    "threat_actors": "intrusion-set",
+    "software_toolkits": "tool",
+    "attack_techniques": "attack-pattern",
+    "campaigns": "campaign",
+}
 
 
 class ConvertToSTIXIndicator(BaseConvertToSTIX):
@@ -402,7 +412,13 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             if not rel_data:
                 continue
             for item in rel_data.data:
-                rels.extend(rel_func(ioc_entry, item))
+                evidence = ioc_threat_evidence(
+                    entry.attributes.gti_assessment if entry.attributes else None,
+                    DELTA_THREAT_TYPES.get(rel_field),
+                    item.attributes.name if item.attributes else None,
+                    item.id,
+                )
+                rels.extend(rel_func(ioc_entry, item, evidence))
 
         return rels
 
@@ -509,10 +525,13 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             return IPV6Address(value=value, **common)
         return DomainName(value=value, **common)
 
-    def _indicates(self, ioc_entry: Indicator, target: Any) -> list[_STIXBase]:
+    def _indicates(
+        self, ioc_entry: Indicator, target: Any, evidence: str | None = None
+    ) -> list[_STIXBase]:
         """Return the target and the 'indicates' relationship from the IOC to it.
 
-        The description states that the IOC deltas feed lists the target.
+        The description states that the IOC deltas feed lists the target, then the
+        GTI evidence of the IOC supporting the link.
         """
         stix_target = target.to_stix2_object()
         relationship = Relationship(
@@ -521,12 +540,21 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             target=target,
             author=self.organization,
             markings=[self.tlp_marking],
-            description=optional_reason(ioc_delta_association_reason(stix_target)),
+            description=optional_reason(
+                " ".join(
+                    part
+                    for part in (ioc_delta_association_reason(stix_target), evidence)
+                    if part
+                )
+            ),
         )
         return [stix_target, relationship.to_stix2_object()]
 
     def _create_relation_malware_family(
-        self, ioc_entry: Indicator, malware_data: IOCDeltaRelationshipItem
+        self,
+        ioc_entry: Indicator,
+        malware_data: IOCDeltaRelationshipItem,
+        evidence: str | None = None,
     ) -> list[_STIXBase]:
 
         if not malware_data.attributes or not malware_data.attributes.name:
@@ -541,10 +569,13 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        return self._indicates(ioc_entry, malware)
+        return self._indicates(ioc_entry, malware, evidence)
 
     def _create_relation_campaign(
-        self, ioc_entry: Indicator, campaign_data: IOCDeltaRelationshipItem
+        self,
+        ioc_entry: Indicator,
+        campaign_data: IOCDeltaRelationshipItem,
+        evidence: str | None = None,
     ) -> list[_STIXBase]:
         if not campaign_data.attributes or not campaign_data.attributes.name:
             return []
@@ -557,12 +588,13 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        return self._indicates(ioc_entry, campaign)
+        return self._indicates(ioc_entry, campaign, evidence)
 
     def _create_relation_threat_actor(
         self,
         ioc_entry: Indicator,
         threat_actor_data: IOCDeltaRelationshipItem,
+        evidence: str | None = None,
     ) -> list[_STIXBase]:
         if not threat_actor_data.attributes or not threat_actor_data.attributes.name:
             return []
@@ -575,12 +607,13 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        return self._indicates(ioc_entry, intrusion_set)
+        return self._indicates(ioc_entry, intrusion_set, evidence)
 
     def _create_relation_software_toolkit(
         self,
         ioc_entry: Indicator,
         software_toolkit_data: IOCDeltaRelationshipItem,
+        evidence: str | None = None,
     ) -> list[_STIXBase]:
         if (
             not software_toolkit_data.attributes
@@ -596,12 +629,13 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        return self._indicates(ioc_entry, software_toolkit)
+        return self._indicates(ioc_entry, software_toolkit, evidence)
 
     def _create_relation_attack_technique(
         self,
         ioc_entry: Indicator,
         attack_technique_data: IOCDeltaRelationshipItem,
+        evidence: str | None = None,
     ) -> list[_STIXBase]:
         if not attack_technique_data.id:
             return []
@@ -615,4 +649,4 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        return self._indicates(ioc_entry, attack_pattern)
+        return self._indicates(ioc_entry, attack_pattern, evidence)
