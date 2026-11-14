@@ -18,6 +18,9 @@ class LocationWithTiming(BaseModel):
     confidence: str | None = None  # GTI confidence, e.g. "confirmed"
     note: str | None = None  # GTI description of the association
     source: str | None = None  # GTI information supplier
+    subject: str | None = (
+        None  # Detail the note is about, e.g. the industry of a sector
+    )
     first_seen: datetime | None = None
     last_seen: datetime | None = None
     is_targeted: bool = False
@@ -33,5 +36,8 @@ class IdentityWithTiming(BaseModel):
     confidence: str | None = None  # GTI confidence, e.g. "confirmed"
     note: str | None = None  # GTI description of the association
     source: str | None = None  # GTI information supplier
+    subject: str | None = (
+        None  # Detail the note is about, e.g. the industry of a sector
+    )
     first_seen: datetime | None = None
     last_seen: datetime | None = None

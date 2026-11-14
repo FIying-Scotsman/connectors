@@ -6,8 +6,13 @@ targets with the same GTI fields (`targeted_regions_hierarchy`,
 them into Country locations and Sector identities, with the GTI dates, confidence,
 source and note of each association (see `timing_models`). A collection mapper only
 sets its `entity_label` and keeps its own constructor and attribute name.
+
+The same country or sector listed several times for one entity is merged into one
+object: earliest first seen, latest last seen, every distinct confidence, source and
+note kept.
 """
 
+from collections.abc import Callable, Hashable
 from datetime import datetime, timezone
 from typing import Any, ClassVar, TypeVar
 
@@ -51,6 +56,56 @@ def seen_dates(
     if first and last and last <= first:
         last = None
     return first, last
+
+
+def _join_distinct(values: list[str | None]) -> str | None:
+    """Join the distinct non-empty values in order, or None."""
+    distinct = list(
+        dict.fromkeys(value.strip() for value in values if value and value.strip())
+    )
+    return "; ".join(distinct) or None
+
+
+def merge_duplicates(
+    items: list[TimingT], key: Callable[[TimingT], Hashable]
+) -> list[TimingT]:
+    """Merge the items with the same key, keeping the first occurrence order.
+
+    Dates span the earliest first seen to the latest last seen. Distinct confidences,
+    sources and notes are joined with '; '. Notes are prefixed with their subject
+    (e.g. the industry of a sector) when several are merged.
+    """
+    groups: dict[Hashable, list[TimingT]] = {}
+    for item in items:
+        groups.setdefault(key(item), []).append(item)
+
+    merged = []
+    for group in groups.values():
+        if len(group) == 1:
+            merged.append(group[0])
+            continue
+        first_dates = [item.first_seen for item in group if item.first_seen]
+        last_dates = [item.last_seen for item in group if item.last_seen]
+        first_seen = min(first_dates) if first_dates else None
+        last_seen = max(last_dates) if last_dates else None
+        if first_seen and last_seen and last_seen <= first_seen:
+            last_seen = None
+        notes = [
+            f"{item.subject}: {item.note}" if item.subject and item.note else item.note
+            for item in group
+        ]
+        merged.append(
+            group[0].model_copy(
+                update={
+                    "first_seen": first_seen,
+                    "last_seen": last_seen,
+                    "confidence": _join_distinct([item.confidence for item in group]),
+                    "source": _join_distinct([item.source for item in group]),
+                    "note": _join_distinct(notes),
+                }
+            )
+        )
+    return merged
 
 
 def targeting_relationships(
@@ -164,7 +219,9 @@ class BaseCountryMapper(_TargetingMapper):
             for region in getattr(attributes, "source_regions_hierarchy", None) or []
             if (country := self._create_country_from_source_with_timing(region))
         ]
-        return result
+        return merge_duplicates(
+            result, key=lambda item: (item.location.id, item.is_targeted)
+        )
 
     def _create_country_with_timing(
         self, region_data: Any, is_targeted: bool, is_source: bool
@@ -235,7 +292,7 @@ class BaseSectorMapper(_TargetingMapper):
             for industry in getattr(attributes, "targeted_industries_tree", None) or []
             if (sector := self._process_industry_with_timing(industry))
         ]
-        return result
+        return merge_duplicates(result, key=lambda item: item.identity.id)
 
     @staticmethod
     def _sector_name(industry_data: Any) -> str | None:
@@ -265,11 +322,13 @@ class BaseSectorMapper(_TargetingMapper):
         first_seen, last_seen = seen_dates(
             industry_data.first_seen, industry_data.last_seen
         )
+        industry = (industry_data.industry or "").strip()
         return IdentityWithTiming(
             identity=sector.to_stix2_object(),
             confidence=industry_data.confidence,
             note=industry_data.description,
             source=industry_data.source,
+            subject=industry if industry and industry != name else None,
             first_seen=first_seen,
             last_seen=last_seen,
         )
