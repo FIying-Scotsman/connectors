@@ -571,6 +571,7 @@ These relationships are **only produced when the Campaigns collection is enabled
 | `epss.score`                            | `x_opencti_epss_score`               | EPSS probability of exploitation in next 30 days |
 | `epss.percentile`                       | `x_opencti_epss_percentile`          | EPSS percentile                                  |
 | `cwe.id`                                | `x_opencti_cwe`                      | CWE identifier                                   |
+| `cisa_known_exploited`                  | `x_opencti_cisa_kev`                 | `true` when listed in CISA KEV, never set to `false` |
 | `tags_details`                          | `labels`                             | From `tags_details[].value`                      |
 | `sources`                               | `external_references`                | Source URLs and GTI VirusTotal link              |
 
