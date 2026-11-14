@@ -19,42 +19,43 @@ from connector.src.custom.models.gti.gti_domain_model import (
     GTIDomainData,
 )
 from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
-from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.fields import Use
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
 
+from tests.factories import GTIModelFactory
 
-class VerdictFactory(ModelFactory[Verdict]):
+
+class VerdictFactory(GTIModelFactory[Verdict]):
     """Factory for Verdict model."""
 
     __model__ = Verdict
 
 
-class ThreatScoreFactory(ModelFactory[ThreatScore]):
+class ThreatScoreFactory(GTIModelFactory[ThreatScore]):
     """Factory for ThreatScore model."""
 
     __model__ = ThreatScore
 
 
-class ContributingFactorsFactory(ModelFactory[ContributingFactors]):
+class ContributingFactorsFactory(GTIModelFactory[ContributingFactors]):
     """Factory for ContributingFactors model."""
 
     __model__ = ContributingFactors
 
 
-class GTIAssessmentFactory(ModelFactory[GTIAssessment]):
+class GTIAssessmentFactory(GTIModelFactory[GTIAssessment]):
     """Factory for GTIAssessment model."""
 
     __model__ = GTIAssessment
 
 
-class DomainModelFactory(ModelFactory[DomainModel]):
+class DomainModelFactory(GTIModelFactory[DomainModel]):
     """Factory for DomainModel."""
 
     __model__ = DomainModel
 
 
-class GTIDomainDataFactory(ModelFactory[GTIDomainData]):
+class GTIDomainDataFactory(GTIModelFactory[GTIDomainData]):
     """Factory for GTIDomainData."""
 
     __model__ = GTIDomainData

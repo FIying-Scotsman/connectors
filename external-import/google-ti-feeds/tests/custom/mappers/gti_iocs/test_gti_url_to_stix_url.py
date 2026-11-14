@@ -19,42 +19,43 @@ from connector.src.custom.models.gti.gti_url_model import (
     URLModel,
 )
 from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
-from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.fields import Use
 from stix2.v21 import Identity, MarkingDefinition
 
+from tests.factories import GTIModelFactory
 
-class VerdictFactory(ModelFactory[Verdict]):
+
+class VerdictFactory(GTIModelFactory[Verdict]):
     """Factory for Verdict model."""
 
     __model__ = Verdict
 
 
-class ThreatScoreFactory(ModelFactory[ThreatScore]):
+class ThreatScoreFactory(GTIModelFactory[ThreatScore]):
     """Factory for ThreatScore model."""
 
     __model__ = ThreatScore
 
 
-class ContributingFactorsFactory(ModelFactory[ContributingFactors]):
+class ContributingFactorsFactory(GTIModelFactory[ContributingFactors]):
     """Factory for ContributingFactors model."""
 
     __model__ = ContributingFactors
 
 
-class GTIAssessmentFactory(ModelFactory[GTIAssessment]):
+class GTIAssessmentFactory(GTIModelFactory[GTIAssessment]):
     """Factory for GTIAssessment model."""
 
     __model__ = GTIAssessment
 
 
-class URLModelFactory(ModelFactory[URLModel]):
+class URLModelFactory(GTIModelFactory[URLModel]):
     """Factory for URLModel."""
 
     __model__ = URLModel
 
 
-class GTIURLDataFactory(ModelFactory[GTIURLData]):
+class GTIURLDataFactory(GTIModelFactory[GTIURLData]):
     """Factory for GTIURLData."""
 
     __model__ = GTIURLData

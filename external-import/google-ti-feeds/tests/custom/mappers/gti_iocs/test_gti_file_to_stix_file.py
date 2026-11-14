@@ -19,42 +19,43 @@ from connector.src.custom.models.gti.gti_file_model import (
     GTIFileData,
 )
 from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
-from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.fields import Use
 from stix2.v21 import Identity, MarkingDefinition
 
+from tests.factories import GTIModelFactory
 
-class VerdictFactory(ModelFactory[Verdict]):
+
+class VerdictFactory(GTIModelFactory[Verdict]):
     """Create verdict for testing."""
 
     __model__ = Verdict
 
 
-class ThreatScoreFactory(ModelFactory[ThreatScore]):
+class ThreatScoreFactory(GTIModelFactory[ThreatScore]):
     """Create threat score for testing."""
 
     __model__ = ThreatScore
 
 
-class ContributingFactorsFactory(ModelFactory[ContributingFactors]):
+class ContributingFactorsFactory(GTIModelFactory[ContributingFactors]):
     """Create contributing factors for testing."""
 
     __model__ = ContributingFactors
 
 
-class GTIAssessmentFactory(ModelFactory[GTIAssessment]):
+class GTIAssessmentFactory(GTIModelFactory[GTIAssessment]):
     """Create GTI assessment for testing."""
 
     __model__ = GTIAssessment
 
 
-class FileModelFactory(ModelFactory[FileModel]):
+class FileModelFactory(GTIModelFactory[FileModel]):
     """Create file model for testing."""
 
     __model__ = FileModel
 
 
-class GTIFileDataFactory(ModelFactory[GTIFileData]):
+class GTIFileDataFactory(GTIModelFactory[GTIFileData]):
     """Create GTI file data for testing."""
 
     __model__ = GTIFileData

@@ -19,42 +19,43 @@ from connector.src.custom.models.gti.gti_ip_addresses_model import (
     IPModel,
 )
 from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
-from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.fields import Use
 from stix2.v21 import Identity, MarkingDefinition
 
+from tests.factories import GTIModelFactory
 
-class VerdictFactory(ModelFactory[Verdict]):
+
+class VerdictFactory(GTIModelFactory[Verdict]):
     """Factory for Verdict model."""
 
     __model__ = Verdict
 
 
-class ThreatScoreFactory(ModelFactory[ThreatScore]):
+class ThreatScoreFactory(GTIModelFactory[ThreatScore]):
     """Factory for ThreatScore model."""
 
     __model__ = ThreatScore
 
 
-class ContributingFactorsFactory(ModelFactory[ContributingFactors]):
+class ContributingFactorsFactory(GTIModelFactory[ContributingFactors]):
     """Factory for ContributingFactors model."""
 
     __model__ = ContributingFactors
 
 
-class GTIAssessmentFactory(ModelFactory[GTIAssessment]):
+class GTIAssessmentFactory(GTIModelFactory[GTIAssessment]):
     """Factory for GTIAssessment model."""
 
     __model__ = GTIAssessment
 
 
-class IPModelFactory(ModelFactory[IPModel]):
+class IPModelFactory(GTIModelFactory[IPModel]):
     """Factory for IPModel."""
 
     __model__ = IPModel
 
 
-class GTIIPDataFactory(ModelFactory[GTIIPData]):
+class GTIIPDataFactory(GTIModelFactory[GTIIPData]):
     """Factory for GTIIPData."""
 
     __model__ = GTIIPData

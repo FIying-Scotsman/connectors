@@ -19,15 +19,16 @@ from connector.src.custom.models.gti.gti_threat_actor_model import (
     ThreatActorModel,
 )
 from polyfactory import Use
-from polyfactory.factories.pydantic_factory import ModelFactory
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
+
+from tests.factories import GTIModelFactory
 
 # =====================
 # Polyfactory Factories
 # =====================
 
 
-class AltNameDetailFactory(ModelFactory[AltNameDetail]):
+class AltNameDetailFactory(GTIModelFactory[AltNameDetail]):
     """Factory for AltNameDetail model."""
 
     __model__ = AltNameDetail
@@ -36,7 +37,7 @@ class AltNameDetailFactory(ModelFactory[AltNameDetail]):
     value = "APT Example"
 
 
-class SeenDetailFactory(ModelFactory[SeenDetail]):
+class SeenDetailFactory(GTIModelFactory[SeenDetail]):
     """Factory for SeenDetail model."""
 
     __model__ = SeenDetail
@@ -45,7 +46,7 @@ class SeenDetailFactory(ModelFactory[SeenDetail]):
     value = "2023-01-01T00:00:00Z"
 
 
-class MotivationFactory(ModelFactory[Motivation]):
+class MotivationFactory(GTIModelFactory[Motivation]):
     """Factory for Motivation model."""
 
     __model__ = Motivation
@@ -54,7 +55,7 @@ class MotivationFactory(ModelFactory[Motivation]):
     value = "Financial"
 
 
-class TagDetailFactory(ModelFactory[TagDetail]):
+class TagDetailFactory(GTIModelFactory[TagDetail]):
     """Factory for TagDetail model."""
 
     __model__ = TagDetail
@@ -63,7 +64,7 @@ class TagDetailFactory(ModelFactory[TagDetail]):
     value = "APT"
 
 
-class TargetedIndustryFactory(ModelFactory[TargetedIndustry]):
+class TargetedIndustryFactory(GTIModelFactory[TargetedIndustry]):
     """Factory for TargetedIndustry model."""
 
     __model__ = TargetedIndustry
@@ -72,7 +73,7 @@ class TargetedIndustryFactory(ModelFactory[TargetedIndustry]):
     industry_group = "Financial Services"
 
 
-class ThreatActorModelFactory(ModelFactory[ThreatActorModel]):
+class ThreatActorModelFactory(GTIModelFactory[ThreatActorModel]):
     """Factory for ThreatActorModel."""
 
     __model__ = ThreatActorModel
@@ -86,7 +87,7 @@ class ThreatActorModelFactory(ModelFactory[ThreatActorModel]):
     private = False
 
 
-class GTIThreatActorDataFactory(ModelFactory[GTIThreatActorData]):
+class GTIThreatActorDataFactory(GTIModelFactory[GTIThreatActorData]):
     """Factory for GTIThreatActorData."""
 
     __model__ = GTIThreatActorData

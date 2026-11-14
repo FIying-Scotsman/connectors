@@ -11,18 +11,19 @@ from connector.src.custom.models.gti.gti_report_model import (
     Links,
     ReportModel,
 )
-from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.fields import Use
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
 
+from tests.factories import GTIModelFactory
 
-class LinksFactory(ModelFactory[Links]):
+
+class LinksFactory(GTIModelFactory[Links]):
     """Factory for Links."""
 
     __model__ = Links
 
 
-class ReportModelFactory(ModelFactory[ReportModel]):
+class ReportModelFactory(GTIModelFactory[ReportModel]):
     """Factory for ReportModel."""
 
     __model__ = ReportModel
@@ -31,7 +32,7 @@ class ReportModelFactory(ModelFactory[ReportModel]):
     private = False
 
 
-class GTIReportDataFactory(ModelFactory[GTIReportData]):
+class GTIReportDataFactory(GTIModelFactory[GTIReportData]):
     """Factory for GTIReportData."""
 
     __model__ = GTIReportData

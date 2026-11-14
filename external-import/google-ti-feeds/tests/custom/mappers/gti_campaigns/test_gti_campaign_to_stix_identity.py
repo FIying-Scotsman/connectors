@@ -11,24 +11,25 @@ from connector.src.custom.models.gti.gti_campaign_model import (
     GTICampaignData,
     TargetedIndustry,
 )
-from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.fields import Use
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
 
+from tests.factories import GTIModelFactory
 
-class TargetedIndustryFactory(ModelFactory[TargetedIndustry]):
+
+class TargetedIndustryFactory(GTIModelFactory[TargetedIndustry]):
     """Factory for TargetedIndustry model."""
 
     __model__ = TargetedIndustry
 
 
-class CampaignModelFactory(ModelFactory[CampaignModel]):
+class CampaignModelFactory(GTIModelFactory[CampaignModel]):
     """Factory for CampaignModel."""
 
     __model__ = CampaignModel
 
 
-class GTICampaignDataFactory(ModelFactory[GTICampaignData]):
+class GTICampaignDataFactory(GTIModelFactory[GTICampaignData]):
     """Factory for GTICampaignData."""
 
     __model__ = GTICampaignData

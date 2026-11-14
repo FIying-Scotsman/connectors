@@ -8,47 +8,51 @@ from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_
 )
 from connector.src.custom.models.gti.gti_software_toolkit_model import (
     GTISoftwareToolkitData,
+    MalwareRole,
     SoftwareToolkitModel,
     SourceRegion,
     TargetedIndustry,
     TargetedRegion,
 )
-from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.fields import Use
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
+
+from tests.factories import GTIModelFactory
 
 # ---------------------------------------------------------------------------
 # Factories
 # ---------------------------------------------------------------------------
 
 
-class SourceRegionFactory(ModelFactory[SourceRegion]):
+class SourceRegionFactory(GTIModelFactory[SourceRegion]):
     """Factory for SourceRegion model."""
 
     __model__ = SourceRegion
 
 
-class TargetedRegionFactory(ModelFactory[TargetedRegion]):
+class TargetedRegionFactory(GTIModelFactory[TargetedRegion]):
     """Factory for TargetedRegion model."""
 
     __model__ = TargetedRegion
 
 
-class TargetedIndustryFactory(ModelFactory[TargetedIndustry]):
+class TargetedIndustryFactory(GTIModelFactory[TargetedIndustry]):
     """Factory for TargetedIndustry model."""
 
     __model__ = TargetedIndustry
 
 
-class SoftwareToolkitModelFactory(ModelFactory[SoftwareToolkitModel]):
+class SoftwareToolkitModelFactory(GTIModelFactory[SoftwareToolkitModel]):
     """Factory for SoftwareToolkitModel."""
 
     __model__ = SoftwareToolkitModel
+    # GTI roles become STIX tool types: random strings are outside the vocabulary.
+    malware_roles = Use(lambda: [MalwareRole(value="remote-access")])
     creation_date = 1672531200
     last_modification_date = 1672617600
 
 
-class GTISoftwareToolkitDataFactory(ModelFactory[GTISoftwareToolkitData]):
+class GTISoftwareToolkitDataFactory(GTIModelFactory[GTISoftwareToolkitData]):
     """Factory for GTISoftwareToolkitData."""
 
     __model__ = GTISoftwareToolkitData
