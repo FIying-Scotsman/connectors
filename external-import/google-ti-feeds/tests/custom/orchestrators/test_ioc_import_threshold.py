@@ -6,7 +6,9 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from connector.src.custom.orchestrators.base_orchestrator import BaseOrchestrator
+from connector.src.custom.orchestrators.collection_orchestrator import (
+    CollectionOrchestrator,
+)
 from connector.src.custom.orchestrators.report.orchestrator_report import (
     OrchestratorReport,
 )
@@ -31,9 +33,11 @@ def _entity(ioc_count: int | None) -> Any:
 
 def _skip(threshold: int | None, entity: Any) -> tuple[list[str], MagicMock]:
     orchestrator = SimpleNamespace(
-        config=SimpleNamespace(ioc_import_threshold=threshold), logger=MagicMock()
+        LOG_PREFIX="[Test]",
+        config=SimpleNamespace(ioc_import_threshold=threshold),
+        logger=MagicMock(),
     )
-    result = BaseOrchestrator._skip_iocs_above_threshold(
+    result = CollectionOrchestrator._skip_iocs_above_threshold(
         orchestrator,  # type: ignore[arg-type]
         list(ALL_SUBENTITY_TYPES),
         entity,

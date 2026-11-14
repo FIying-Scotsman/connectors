@@ -1,22 +1,17 @@
 """Base orchestrator class with common functionality."""
 
 import logging
-from typing import Any
+from typing import Any, ClassVar
 
 from connector.src.custom.client_api.client_api import ClientAPI
 from connector.src.custom.configs import GTIConfig
-from connector.src.custom.configs.gti_config_common import IOC_SUBENTITY_TYPES
-from connector.src.custom.convert_to_stix.convert_to_stix_base import (
-    INTRUSION_SET_CAPABILITY_RELATIONSHIP_TYPES,
-    ioc_threat_relationship_types,
-)
 from connector.src.octi.work_manager import WorkManager
-
-LOG_PREFIX = "[BaseOrchestrator]"
 
 
 class BaseOrchestrator:
     """Base orchestrator class with common functionality."""
+
+    LOG_PREFIX: ClassVar[str] = "[BaseOrchestrator]"
 
     def __init__(
         self,
@@ -42,27 +37,22 @@ class BaseOrchestrator:
         self.client_api = ClientAPI(config, logger)
 
     def _log_relationships_summary(
-        self,
-        subentities_ids: dict[str, Any],
-        current_idx: int,
-        total: int,
-        entity_type: str,
+        self, subentities: dict[str, Any], current_idx: int, total: int
     ) -> None:
-        """Log summary of relationships found.
+        """Log the number of related entities found, by type.
 
         Args:
-            subentities_ids: dictionary of subentity IDs
-            current_idx: Current index in processing
-            total: Total number of entities
-            entity_type: Type of entity being processed
+            subentities: Related entities grouped by type
+            current_idx: Index of the entity being processed
+            total: Number of entities in the page
 
         """
-        rel_summary = ", ".join([f"{k}: {len(v)}" for k, v in subentities_ids.items()])
+        rel_summary = ", ".join([f"{k}: {len(v)}" for k, v in subentities.items()])
         if len(rel_summary) > 0:
             self.logger.info(
                 "Found relationships",
                 {
-                    "prefix": "[BaseOrchestrator]",
+                    "prefix": self.LOG_PREFIX,
                     "current": current_idx + 1,
                     "total": total,
                     "relationships": rel_summary,
@@ -70,29 +60,26 @@ class BaseOrchestrator:
             )
 
     def _log_entities_summary(
-        self, all_entities: list[Any], current_idx: int, total: int, entity_type: str
+        self, all_entities: list[Any], current_idx: int, total: int
     ) -> None:
-        """Log summary of converted entities.
+        """Log the number of converted STIX objects, by type.
 
         Args:
-            all_entities: list of all converted entities
-            current_idx: Current index in processing
-            total: Total number of entities
-            entity_type: Type of entity being processed
+            all_entities: Converted STIX objects
+            current_idx: Index of the entity being processed
+            total: Number of entities in the page
 
         """
         entity_types: dict[str, int] = {}
         for entity in all_entities:
-            entity_type_attr = getattr(entity, "type", None)
-            if entity_type_attr:
-                entity_types[entity_type_attr] = (
-                    entity_types.get(entity_type_attr, 0) + 1
-                )
+            entity_type = getattr(entity, "type", None)
+            if entity_type:
+                entity_types[entity_type] = entity_types.get(entity_type, 0) + 1
         entities_summary = ", ".join([f"{k}: {v}" for k, v in entity_types.items()])
         self.logger.info(
             "Converted to STIX entities",
             {
-                "prefix": "[BaseOrchestrator]",
+                "prefix": self.LOG_PREFIX,
                 "current": current_idx + 1,
                 "total": total,
                 "entities_count": len(all_entities),
@@ -115,7 +102,7 @@ class BaseOrchestrator:
         ) >= batch_processor.config.batch_size * 2:
             self.logger.info(
                 "Need to Flush before adding next items to preserve consistency of the bundle",
-                {"prefix": LOG_PREFIX},
+                {"prefix": self.LOG_PREFIX},
             )
             batch_processor.flush()
 
@@ -133,87 +120,3 @@ class BaseOrchestrator:
         batch_processor.add_item(converter.organization)
         batch_processor.add_item(converter.tlp_marking)
         batch_processor.add_items(all_entities)
-
-    @staticmethod
-    def _filter_subentity_types(subentity_types: list[str], entity: Any) -> list[str]:
-        """Filter subentity types based on the entity's counters.
-
-        When the entity exposes a ``counters`` object (via ``attributes.counters``),
-        subentity types whose counter is explicitly ``0`` are removed from the
-        list to avoid unnecessary API calls.
-
-        See: https://github.com/OpenCTI-Platform/connectors/issues/6562
-
-        Args:
-            subentity_types: The full list of subentity types to fetch.
-            entity: The GTI entity object (must have ``attributes.counters``).
-
-        Returns:
-            A filtered list of subentity types worth fetching.
-
-        """
-        counters = getattr(getattr(entity, "attributes", None), "counters", None)
-        if counters is None:
-            return subentity_types
-
-        return [
-            subentity_type
-            for subentity_type in subentity_types
-            if getattr(counters, subentity_type, None) != 0
-        ]
-
-    def _skip_iocs_above_threshold(
-        self, subentity_types: list[str], entity: Any
-    ) -> list[str]:
-        """Drop IOC sub-entity types when the entity references too many IOCs.
-
-        The IOC count comes from ``attributes.counters.iocs``. Entities without
-        counters, or with the threshold unset, keep every sub-entity type.
-
-        Args:
-            subentity_types: The sub-entity types to fetch.
-            entity: The GTI report or campaign.
-
-        Returns:
-            The sub-entity types to fetch.
-
-        """
-        threshold = getattr(self.config, "ioc_import_threshold", None)
-        counters = getattr(getattr(entity, "attributes", None), "counters", None)
-        ioc_count = getattr(counters, "iocs", None)
-        if threshold is None or ioc_count is None or ioc_count <= threshold:
-            return subentity_types
-
-        self.logger.warning(
-            "IOC count above threshold, skipping IOC sub-entities",
-            {
-                "prefix": LOG_PREFIX,
-                "entity_id": getattr(entity, "id", None),
-                "ioc_count": ioc_count,
-                "ioc_import_threshold": threshold,
-            },
-        )
-        return [
-            subentity_type
-            for subentity_type in subentity_types
-            if subentity_type not in IOC_SUBENTITY_TYPES
-        ]
-
-    def _co_occurrence_relationship_types(
-        self, ioc_threat_types: tuple[str, ...]
-    ) -> dict[tuple[str, str], str]:
-        """Return the enabled co-occurrence rules for a report or campaign.
-
-        Args:
-            ioc_threat_types: STIX types IOCs are linked to.
-
-        Returns:
-            Relationship type keyed by (source, target) STIX type.
-
-        """
-        relationship_types: dict[tuple[str, str], str] = {}
-        if self.config.ioc_link_to_threats:
-            relationship_types |= ioc_threat_relationship_types(ioc_threat_types)
-        if self.config.intrusion_set_link_to_capabilities:
-            relationship_types |= INTRUSION_SET_CAPABILITY_RELATIONSHIP_TYPES
-        return relationship_types

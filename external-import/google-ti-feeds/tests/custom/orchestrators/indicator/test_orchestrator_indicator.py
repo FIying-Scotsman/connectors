@@ -434,7 +434,7 @@ def test_log_relationships_summary(gti_config: DummyConfig, caplog: Any) -> None
     """_log_relationships_summary logs when subentities_ids is non-empty."""
     ind_orch = _get_indicator_orchestrator(gti_config, caplog)
     subentities_ids = {"malware": ["id1", "id2"], "campaign": ["id3"]}
-    ind_orch._log_relationships_summary(subentities_ids, 0, 5, "indicator")
+    ind_orch._log_relationships_summary(subentities_ids, 0, 5)
     all_messages = [rec.getMessage() for rec in caplog.records]
     assert any("Found relationships" in msg for msg in all_messages)  # noqa: S101
 
@@ -451,7 +451,7 @@ def test_log_entities_summary(gti_config: DummyConfig, caplog: Any) -> None:
             self.type = entity_type
 
     entities = [FakeEntity("indicator"), FakeEntity("indicator"), FakeEntity("malware")]
-    ind_orch._log_entities_summary(entities, 0, 3, "indicator")
+    ind_orch._log_entities_summary(entities, 0, 3)
     all_messages = [rec.getMessage() for rec in caplog.records]
     assert any(
         "Converted to STIX entities" in msg for msg in all_messages
