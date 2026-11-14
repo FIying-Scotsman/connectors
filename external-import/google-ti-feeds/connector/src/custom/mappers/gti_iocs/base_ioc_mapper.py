@@ -188,7 +188,11 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         return self._create_ioc_relationship("based-on", indicator, observable)
 
     def _create_ioc_relationship(
-        self, relationship_type: str, source: Any, target: Any
+        self,
+        relationship_type: str,
+        source: Any,
+        target: Any,
+        description: str | None = None,
     ) -> RelationshipModel:
         """Create a relationship between two objects of the IOC, with its timestamps."""
         timestamps = self._get_timestamps()
@@ -196,6 +200,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
             relationship_type=relationship_type,
             source_ref=source.id,
             target_ref=target.id,
+            description=description,
             created=timestamps["created"],
             modified=timestamps["modified"],
             created_by_ref=self.organization.id,

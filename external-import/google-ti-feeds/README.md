@@ -316,6 +316,7 @@ IOC options apply to the IOCs (files, domains, URLs, IP addresses) imported by a
 | `GTI_INDICATOR_SCORING` | Strategy used to compute the score of IOC indicators and observables | `threat_score` | `threat_score`, `gti_derived`, `average_detection` |
 | `GTI_INDICATOR_MIN_VERDICT` | Lowest GTI verdict for which an IOC gets an indicator. IOCs below it, or without a verdict, are imported as observables only; the IOC Delta feed, which only imports indicators, skips them | `any` | `any`, `suspicious` (suspicious and malicious), `malicious` |
 | `GTI_IOC_TAGS_AS_LABELS` | Add the GTI tags of IOCs (e.g. `peexe`, `self-signed`) as labels of their indicators and observables. Tags describe file types, behaviours and infrastructure traits, and can create many labels | `false` | `true` / `false` |
+| `GTI_RELATIONSHIP_DESCRIPTIONS` | Describe on each relationship why the connector created it. See below. Can overwrite a relationship description written by an analyst or another source, depending on the connector confidence level | `false` | `true` / `false` |
 | `GTI_IP_LINK_TO_ASN` | Create the autonomous system of IP IOCs (`asn`, `as_owner`, `regional_internet_registry`) and link the IP to it with `belongs-to`. Not used by the IOC Delta feed, which only imports indicators | `false` | `true` / `false` |
 | `GTI_IP_LINK_TO_COUNTRY` | Link IP IOCs to the Country location of their `country` code with `located-at`. The country is identified by its name, resolved from the ISO code, with the official name and ISO codes as aliases; unknown codes are skipped. Not used by the IOC Delta feed, which only imports indicators | `false` | `true` / `false` |
 | `GTI_IOC_IMPORT_THRESHOLD` | Maximum number of IOCs a report or campaign may reference for its IOCs to be fetched. Above it, the IOC sub-entities (`domains`, `files`, `urls`, `ip_addresses`) of that report or campaign are skipped and a warning is logged; its other sub-entities are still imported. Uses the `counters.iocs` value returned by GTI, so no extra API call is made | unset (disabled) | Integer `>= 1` |
@@ -332,6 +333,17 @@ Scoring strategies:
 | `average_detection` | Share of AV engines flagging the IOC in `last_analysis_stats`: `(malicious + 0.5 × suspicious) / (malicious + suspicious + harmless + undetected) × 100`       |
 
 When the selected strategy has no data for an IOC (unknown verdict, no analysis stats), `threat_score` is used. The IOC Delta feed does not provide `last_analysis_stats`, so `average_detection` always uses `threat_score` for it.
+
+By default the connector leaves relationship descriptions empty, so it never overwrites a description written by an analyst or another source. With `GTI_RELATIONSHIP_DESCRIPTIONS` enabled, every relationship created from GTI data has a description stating why it exists, so an analyst can tell a GTI statement from an inference. This suits platforms where no other source describes these relationships:
+
+| Relationship source                                   | Description                                                                                                  |
+|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| Sub-entities of a collection (e.g. intrusion set `uses` malware) | "Stated by GTI: Google Threat Intelligence lists the malware 'X' among the related objects of the intrusion set 'Y'." |
+| IOC Delta feed threat links                           | "Stated by GTI: the IOC deltas feed lists the malware 'X' among the relationships of this IOC."              |
+| Co-occurrence (`GTI_IOC_LINK_TO_THREATS`, `GTI_INTRUSION_SET_LINK_TO_CAPABILITIES`) | "Inferred by the connector, not stated by GTI: the intrusion set 'Y' and the malware 'X' are both referenced by the report 'Z'." |
+| IP links (`GTI_IP_LINK_TO_ASN`, `GTI_IP_LINK_TO_COUNTRY`) | The GTI autonomous system or country code of the IP                                                          |
+
+The relationship ID does not depend on its description: when several reports lead to the same co-occurrence relationship, OpenCTI keeps the description of the last import, depending on the connector confidence level. The report contents still list every report it comes from.
 
 Relationships created by `GTI_IOC_LINK_TO_THREATS`:
 

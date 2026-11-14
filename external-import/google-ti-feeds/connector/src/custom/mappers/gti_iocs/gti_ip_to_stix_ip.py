@@ -6,6 +6,11 @@ from typing import Any
 
 import pycountry
 from connector.src.custom.mappers.gti_iocs.base_ioc_mapper import BaseIOCMapper
+from connector.src.custom.mappers.relationship_reasons import (
+    ip_autonomous_system_reason,
+    ip_country_reason,
+    optional_reason,
+)
 from connector.src.custom.models.gti.gti_ip_addresses_model import (
     GTIIPData,
 )
@@ -90,16 +95,36 @@ class GTIIPToSTIXIP(BaseIOCMapper[GTIIPData]):
         """
         stix_objects = super().to_stix()
         observable = stix_objects[0]
-        links = (
-            ("belongs-to", self._create_autonomous_system()),
-            ("located-at", self._create_country()),
-        )
-        for relationship_type, target in links:
-            if target is not None:
-                stix_objects.append(target)
-                stix_objects.append(
-                    self._create_ioc_relationship(relationship_type, observable, target)
+        attributes = self.ip.attributes
+        autonomous_system = self._create_autonomous_system()
+        country = self._create_country()
+        links = []
+        if autonomous_system is not None and attributes and attributes.asn is not None:
+            links.append(
+                (
+                    "belongs-to",
+                    autonomous_system,
+                    ip_autonomous_system_reason(attributes.asn, attributes.as_owner),
                 )
+            )
+        if country is not None and attributes and attributes.country:
+            links.append(
+                (
+                    "located-at",
+                    country,
+                    ip_country_reason(country.name, attributes.country),
+                )
+            )
+        for relationship_type, target, reason in links:
+            stix_objects.append(target)
+            stix_objects.append(
+                self._create_ioc_relationship(
+                    relationship_type,
+                    observable,
+                    target,
+                    description=optional_reason(reason),
+                )
+            )
         return stix_objects
 
     def _natively_linked_fields(self) -> frozenset[str]:

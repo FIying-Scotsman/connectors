@@ -10,6 +10,10 @@ from typing import Any, Protocol
 from connector.src.custom.mappers.gti_reports.gti_report_to_stix_report import (
     GTIReportToSTIXReport,
 )
+from connector.src.custom.mappers.relationship_reasons import (
+    gti_association_reason,
+    with_description,
+)
 
 _contexts = {}
 
@@ -228,7 +232,7 @@ def _create_single_relationship(
                 },
             )
 
-        return rel
+        return with_description(rel, gti_association_reason(context_entity, entity))
 
     except Exception as e:
         _logger.warning(

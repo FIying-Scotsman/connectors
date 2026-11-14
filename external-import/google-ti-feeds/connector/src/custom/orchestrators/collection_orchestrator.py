@@ -93,6 +93,18 @@ class CollectionOrchestrator(BaseOrchestrator, ABC):
     def _progress_total(self) -> int | None:
         """Return the total number of entities reported by GTI."""
 
+    @staticmethod
+    def _main_entity(main_entities: list[Any], stix_type: str) -> Any | None:
+        """Return the first main entity of a STIX type, e.g. the report."""
+        return next(
+            (
+                entity
+                for entity in main_entities
+                if getattr(entity, "type", None) == stix_type
+            ),
+            None,
+        )
+
     def _link_co_occurring_entities(
         self, main_entities: list[Any], subentity_stix: list[Any]
     ) -> list[Any]:

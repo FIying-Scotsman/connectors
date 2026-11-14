@@ -13,6 +13,11 @@ from connector.src.custom.configs.converter_config import (
     CONVERTER_CONFIGS,
 )
 from connector.src.custom.configs.gti_config_common import IOC_SUBENTITY_TYPES
+from connector.src.custom.mappers.relationship_reasons import (
+    co_occurrence_reason,
+    optional_reason,
+    set_relationship_descriptions,
+)
 from connector.src.stix.octi.models.relationship_model import OctiRelationshipModel
 from connector.src.stix.v21.models.sros.relationship_model import RelationshipModel
 from connector.src.utils.converters import GenericConverterFactory
@@ -74,6 +79,9 @@ class BaseConvertToSTIX:
         self.config = config
         self.logger = logger
         self.tlp_level = tlp_level.lower()
+        set_relationship_descriptions(
+            getattr(config, "relationship_descriptions", False) is True
+        )
         self.organization = self._create_organization()
         self.tlp_marking = self._create_tlp_marking()
         self.converter_factory = self._create_converter_factory()
@@ -254,41 +262,47 @@ class BaseConvertToSTIX:
         self,
         stix_objects: list[Any],
         relationship_types: Mapping[tuple[str, str], str],
+        container: Any | None = None,
     ) -> list[RelationshipModel]:
         """Link entities converted for the same report or campaign.
 
         Every object of a source type is linked to every object of its target type.
+        The description states that the link is inferred, and from which container.
 
         Args:
             stix_objects: Converted sub-entities of a single report or campaign.
             relationship_types: Relationship type keyed by (source, target) STIX type.
+            container: The report or campaign, named in the descriptions.
 
         Returns:
             The created relationships.
 
         """
-        ids_by_type: dict[str, list[str]] = defaultdict(list)
+        objects_by_type: dict[str, list[Any]] = defaultdict(list)
         for obj in stix_objects:
             obj_type = getattr(obj, "type", None)
             if obj_type:
-                ids_by_type[obj_type].append(obj.id)
+                objects_by_type[obj_type].append(obj)
 
         now = datetime.now(timezone.utc)
         relationships = [
             OctiRelationshipModel.create(
                 relationship_type=relationship_type,
-                source_ref=source_id,
-                target_ref=target_id,
+                source_ref=source.id,
+                target_ref=target.id,
                 organization_id=self.organization.id,
                 marking_ids=[self.tlp_marking.id],
+                description=optional_reason(
+                    co_occurrence_reason(source, target, container)
+                ),
                 created=now,
                 modified=now,
             )
             for (source_type, target_type), relationship_type in (
                 relationship_types.items()
             )
-            for source_id in ids_by_type.get(source_type, [])
-            for target_id in ids_by_type.get(target_type, [])
+            for source in objects_by_type.get(source_type, [])
+            for target in objects_by_type.get(target_type, [])
         ]
 
         self.logger.debug(

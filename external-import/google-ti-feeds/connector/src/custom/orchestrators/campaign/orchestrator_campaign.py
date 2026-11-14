@@ -59,5 +59,7 @@ class OrchestratorCampaign(CollectionOrchestrator):
         if not relationship_types:
             return []
         return self.converter.create_co_occurrence_relationships(
-            subentity_stix, relationship_types
+            subentity_stix,
+            relationship_types,
+            container=self._main_entity(main_entities, "campaign"),
         )

@@ -78,19 +78,15 @@ class OrchestratorReport(CollectionOrchestrator):
         )
         if not relationship_types:
             return []
+        report = self._main_entity(main_entities, "report")
         relationships = self.converter.create_co_occurrence_relationships(
-            subentity_stix, relationship_types
+            subentity_stix, relationship_types, container=report
         )
-        for entity in main_entities:
-            if getattr(entity, "type", None) == "report":
-                GTIReportToSTIXReport.add_object_refs(
-                    [
-                        relationship.id
-                        for relationship in relationships
-                        if relationship.id
-                    ],
-                    entity,
-                )
+        if report is not None:
+            GTIReportToSTIXReport.add_object_refs(
+                [relationship.id for relationship in relationships if relationship.id],
+                report,
+            )
         return relationships
 
     async def _attach_report_pdf(

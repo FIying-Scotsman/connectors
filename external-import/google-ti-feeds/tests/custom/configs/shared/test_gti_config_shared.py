@@ -98,6 +98,18 @@ def test_ip_link_to_country(env: dict[str, str], expected: bool) -> None:
     assert _load_config(env).ip_link_to_country is expected  # noqa: S101
 
 
+@pytest.mark.parametrize(
+    "env, expected",
+    [({}, False), ({"GTI_RELATIONSHIP_DESCRIPTIONS": "true"}, True)],
+)
+def test_relationship_descriptions(env: dict[str, str], expected: bool) -> None:
+    """Relationship descriptions are disabled by default."""
+    # Given a configuration with or without the option
+    # When it is loaded
+    # Then the option is set
+    assert _load_config(env).relationship_descriptions is expected  # noqa: S101
+
+
 def test_gti_config_exposes_shared_settings() -> None:
     """The unified GTI configuration includes the shared settings."""
     # Given the unified configuration

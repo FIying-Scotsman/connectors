@@ -41,6 +41,16 @@ class GTISharedConfig(GTIBaseConfig):
         "data collection and the IOC deltas feed. Tags describe file types, "
         "behaviours and infrastructure traits, and can create many labels.",
     )
+    relationship_descriptions: bool = Field(
+        default=False,
+        description="Whether to describe on each relationship why the connector "
+        "created it: 'Stated by GTI' for a GTI association, quoting the GTI "
+        "relationship, or 'Inferred by the connector' for co-occurrence links, "
+        "naming the report or campaign. Disabled by default: OpenCTI identifies a "
+        "relationship by its type, source, target and dates, so these descriptions "
+        "can overwrite one written by an analyst or another source, depending on "
+        "the connector confidence level.",
+    )
     ip_link_to_asn: bool = Field(
         default=False,
         description="Whether to create the autonomous system of IP address IOCs, "

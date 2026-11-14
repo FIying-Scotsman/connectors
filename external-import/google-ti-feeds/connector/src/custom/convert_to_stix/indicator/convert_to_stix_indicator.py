@@ -15,6 +15,10 @@ from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
     meets_min_verdict,
 )
 from connector.src.custom.mappers.gti_iocs.stix_pattern import escape_pattern_value
+from connector.src.custom.mappers.relationship_reasons import (
+    ioc_delta_association_reason,
+    optional_reason,
+)
 from connector.src.custom.models.gti.gti_ioc_delta_model import (
     IOCDeltaAttributes,
     IOCDeltaEntry,
@@ -390,6 +394,22 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
 
         return rels
 
+    def _indicates(self, ioc_entry: Indicator, target: Any) -> list[_STIXBase]:
+        """Return the target and the 'indicates' relationship from the IOC to it.
+
+        The description states that the IOC deltas feed lists the target.
+        """
+        stix_target = target.to_stix2_object()
+        relationship = Relationship(
+            type=RelationshipType.INDICATES,
+            source=ioc_entry,
+            target=target,
+            author=self.organization,
+            markings=[self.tlp_marking],
+            description=optional_reason(ioc_delta_association_reason(stix_target)),
+        )
+        return [stix_target, relationship.to_stix2_object()]
+
     def _create_relation_malware_family(
         self, ioc_entry: Indicator, malware_data: IOCDeltaRelationshipItem
     ) -> list[_STIXBase]:
@@ -406,18 +426,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        relationship = Relationship(
-            type=RelationshipType.INDICATES,
-            source=ioc_entry,
-            target=malware,
-            author=self.organization,
-            markings=[self.tlp_marking],
-        )
-
-        return [
-            malware.to_stix2_object(),
-            relationship.to_stix2_object(),
-        ]
+        return self._indicates(ioc_entry, malware)
 
     def _create_relation_campaign(
         self, ioc_entry: Indicator, campaign_data: IOCDeltaRelationshipItem
@@ -433,18 +442,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        relationship = Relationship(
-            type=RelationshipType.INDICATES,
-            source=ioc_entry,
-            target=campaign,
-            author=self.organization,
-            markings=[self.tlp_marking],
-        )
-
-        return [
-            campaign.to_stix2_object(),
-            relationship.to_stix2_object(),
-        ]
+        return self._indicates(ioc_entry, campaign)
 
     def _create_relation_threat_actor(
         self,
@@ -461,18 +459,8 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             author=self.organization,
             markings=[self.tlp_marking],
         )
-        relationship = Relationship(
-            type=RelationshipType.INDICATES,
-            source=ioc_entry,
-            target=intrusion_set,
-            author=self.organization,
-            markings=[self.tlp_marking],
-        )
 
-        return [
-            intrusion_set.to_stix2_object(),
-            relationship.to_stix2_object(),
-        ]
+        return self._indicates(ioc_entry, intrusion_set)
 
     def _create_relation_software_toolkit(
         self,
@@ -493,18 +481,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        relationship = Relationship(
-            type=RelationshipType.INDICATES,
-            source=ioc_entry,
-            target=software_toolkit,
-            author=self.organization,
-            markings=[self.tlp_marking],
-        )
-
-        return [
-            software_toolkit.to_stix2_object(),
-            relationship.to_stix2_object(),
-        ]
+        return self._indicates(ioc_entry, software_toolkit)
 
     def _create_relation_attack_technique(
         self,
@@ -523,15 +500,4 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
         )
 
-        relationship = Relationship(
-            type=RelationshipType.INDICATES,
-            source=ioc_entry,
-            target=attack_pattern,
-            author=self.organization,
-            markings=[self.tlp_marking],
-        )
-
-        return [
-            attack_pattern.to_stix2_object(),
-            relationship.to_stix2_object(),
-        ]
+        return self._indicates(ioc_entry, attack_pattern)

@@ -557,6 +557,11 @@
       "description": "Whether to add the GTI tags of IOCs (e.g. 'peexe', 'self-signed') as labels of their indicators and observables, for every data collection and the IOC deltas feed. Tags describe file types, behaviours and infrastructure traits, and can create many labels.",
       "type": "boolean"
     },
+    "GTI_RELATIONSHIP_DESCRIPTIONS": {
+      "default": false,
+      "description": "Whether to describe on each relationship why the connector created it: 'Stated by GTI' for a GTI association, quoting the GTI relationship, or 'Inferred by the connector' for co-occurrence links, naming the report or campaign. Disabled by default: OpenCTI identifies a relationship by its type, source, target and dates, so these descriptions can overwrite one written by an analyst or another source, depending on the connector confidence level.",
+      "type": "boolean"
+    },
     "GTI_IP_LINK_TO_ASN": {
       "default": false,
       "description": "Whether to create the autonomous system of IP address IOCs, with its number, owner and registry, and link the IP to it with 'belongs-to'. Applies to the IPs of every data collection; the IOC deltas feed only imports indicators, so it is not affected.",
