@@ -578,6 +578,7 @@ These relationships are **only produced when the Campaigns collection is enabled
 | `cisa_known_exploited`                  | `x_opencti_cisa_kev`                 | `true` when listed in CISA KEV, never set to `false` |
 | `tags_details`                          | `labels`                             | From `tags_details[].value`                      |
 | `sources`                               | `external_references`                | Source URLs and GTI VirusTotal link              |
+| `vendor_fix_references`                 | `external_references`                | Vendor fix advisories not listed as sources      |
 
 #### First-level entities produced (composite mapping)
 
