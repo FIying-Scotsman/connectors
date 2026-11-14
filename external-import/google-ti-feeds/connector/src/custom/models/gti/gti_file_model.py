@@ -122,6 +122,35 @@ class SigmaAnalysisStats(BaseModel):
     medium: int | None = Field(None, description="Count of medium-severity matches.")
 
 
+class ThreatSeverityData(BaseModel):
+    """Data the GTI threat severity of a file was computed from."""
+
+    popular_threat_category: str | None = Field(
+        None, description="Most common threat category, e.g. 'trojan'."
+    )
+    type_tag: str | None = Field(None, description="File type tag.")
+    has_similar_files_with_detections: bool | None = Field(
+        None, description="Whether similar files are detected."
+    )
+
+
+class ThreatSeverity(BaseModel):
+    """GTI threat severity of a file."""
+
+    threat_severity_level: str | None = Field(
+        None, description="Severity level, e.g. 'SEVERITY_HIGH'."
+    )
+    level_description: str | None = Field(
+        None, description="Explanation of the severity level."
+    )
+    last_analysis_date: int | None = Field(
+        None, description="Date of the severity computation (UTC timestamp)."
+    )
+    threat_severity_data: ThreatSeverityData | None = Field(
+        None, description="Data the severity was computed from."
+    )
+
+
 class FileModel(BaseModel):
     """Model representing attributes of a file object."""
 
@@ -182,6 +211,9 @@ class FileModel(BaseModel):
     size: int | None = Field(None, description="File size in bytes.")
     tags: list[str] | None = Field(
         None, description="Representative tags for the file."
+    )
+    threat_severity: ThreatSeverity | None = Field(
+        None, description="GTI threat severity of the file."
     )
     tlsh: str | None = Field(None, description="TLSH hash of the file.")
     times_submitted: int | None = Field(

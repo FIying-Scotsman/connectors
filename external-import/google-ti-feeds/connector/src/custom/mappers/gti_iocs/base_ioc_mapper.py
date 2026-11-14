@@ -12,6 +12,7 @@ from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_ioc_description,
     ioc_tag_labels,
     observable_description_properties,
+    threat_category,
 )
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
     compute_ioc_score,
@@ -231,10 +232,13 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         )
 
     def _get_labels(self) -> list[str] | None:
-        """Return the GTI tags when enabled, deduplicated, or None."""
+        """Return the GTI tags and file threat category when enabled, or None."""
         if not self.ioc_tags_as_labels or not self.ioc.attributes:
             return None
-        return ioc_tag_labels(getattr(self.ioc.attributes, "tags", None))
+        return ioc_tag_labels(
+            getattr(self.ioc.attributes, "tags", None),
+            threat_category(self.ioc.attributes),
+        )
 
     def _get_description(self) -> str | None:
         """Get the GTI assessment summary when enabled.

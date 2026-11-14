@@ -572,7 +572,7 @@
     },
     "GTI_IOC_TAGS_AS_LABELS": {
       "default": false,
-      "description": "Whether to add the GTI tags of IOCs (e.g. 'peexe', 'self-signed') as labels of their indicators and observables, for every data collection and the IOC deltas feed. Tags describe file types, behaviours and infrastructure traits, and can create many labels.",
+      "description": "Whether to add the GTI tags of IOCs (e.g. 'peexe', 'self-signed'), and the GTI threat category of files (e.g. 'trojan'), as labels of their indicators and observables, for every data collection and the IOC deltas feed (tags only). Tags describe file types, behaviours and infrastructure traits, and can create many labels.",
       "type": "boolean"
     },
     "GTI_RELATIONSHIP_DESCRIPTIONS": {
@@ -608,7 +608,7 @@
     },
     "GTI_EXTENDED_DESCRIPTIONS": {
       "default": false,
-      "description": "Whether to append the GTI details that have no dedicated OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and observables: GTI assessment (verdict, severity, threat score, summary, contributing factors), plus the country, autonomous system and network of IP addresses, except what ip_link_to_country and ip_link_to_asn import as linked objects. Vulnerabilities: risk rating, exploitation state, exploit availability, exploitation consequence and vectors, remediation priority, exploitation dates, CISA KEV dates and ransomware use, mitigations. Malware families: targeted operating systems and detection names. The GTI description is kept and the details follow it. Can overwrite descriptions edited in OpenCTI, depending on the connector confidence level.",
+      "description": "Whether to append the GTI details that have no dedicated OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and observables: GTI assessment (verdict, severity, threat score, summary, contributing factors), the threat severity of files, plus the country, autonomous system and network of IP addresses, except what ip_link_to_country and ip_link_to_asn import as linked objects. Vulnerabilities: risk rating, exploitation state, exploit availability, exploitation consequence and vectors, remediation priority, exploitation dates, CISA KEV dates and ransomware use, mitigations. Malware families: targeted operating systems and detection names. The GTI description is kept and the details follow it. Can overwrite descriptions edited in OpenCTI, depending on the connector confidence level.",
       "type": "boolean"
     }
   },

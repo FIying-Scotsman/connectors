@@ -37,8 +37,9 @@ class GTISharedConfig(GTIBaseConfig):
     ioc_tags_as_labels: bool = Field(
         default=False,
         description="Whether to add the GTI tags of IOCs (e.g. 'peexe', "
-        "'self-signed') as labels of their indicators and observables, for every "
-        "data collection and the IOC deltas feed. Tags describe file types, "
+        "'self-signed'), and the GTI threat category of files (e.g. 'trojan'), as "
+        "labels of their indicators and observables, for every data collection and "
+        "the IOC deltas feed (tags only). Tags describe file types, "
         "behaviours and infrastructure traits, and can create many labels.",
     )
     relationship_descriptions: bool = Field(
@@ -95,7 +96,8 @@ class GTISharedConfig(GTIBaseConfig):
         description="Whether to append the GTI details that have no dedicated "
         "OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and "
         "observables: GTI assessment (verdict, severity, threat score, summary, "
-        "contributing factors), plus the country, autonomous system and network of "
+        "contributing factors), the threat severity of files, plus the country, "
+        "autonomous system and network of "
         "IP addresses, except what ip_link_to_country and ip_link_to_asn import as "
         "linked objects. Vulnerabilities: risk rating, exploitation state, "
         "exploit availability, exploitation consequence and vectors, remediation "

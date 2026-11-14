@@ -192,13 +192,41 @@ def build_ioc_description(
         return None
     return join_sections(
         build_assessment_description(getattr(attributes, "gti_assessment", None)),
+        threat_severity_section(attributes),
         network_details_section(attributes, linked_fields),
     )
 
 
-def ioc_tag_labels(tags: list[str] | None) -> list[str] | None:
-    """Return the GTI tags as labels, deduplicated in GTI order, or None."""
-    return list(dict.fromkeys(tag for tag in tags or [] if tag)) or None
+def threat_category(attributes: Any) -> str | None:
+    """Return the GTI threat category of a file IOC, e.g. 'trojan', or None."""
+    severity = getattr(attributes, "threat_severity", None)
+    data = getattr(severity, "threat_severity_data", None)
+    return getattr(data, "popular_threat_category", None) or None
+
+
+def threat_severity_section(attributes: Any) -> str | None:
+    """Return the GTI threat severity of a file IOC: level and its explanation."""
+    severity = getattr(attributes, "threat_severity", None)
+    if severity is None:
+        return None
+    return details_section(
+        "GTI threat severity",
+        {
+            "Level": _humanize(
+                getattr(severity, "threat_severity_level", None), "SEVERITY_"
+            ),
+            "Explanation": getattr(severity, "level_description", None),
+            "Threat category": threat_category(attributes),
+        },
+    )
+
+
+def ioc_tag_labels(
+    tags: list[str] | None, category: str | None = None
+) -> list[str] | None:
+    """Return the GTI tags, then the threat category, as labels, deduplicated, or None."""
+    labels = [*(tags or []), category]
+    return list(dict.fromkeys(label for label in labels if label)) or None
 
 
 def observable_description_properties(description: str | None) -> dict[str, Any]:
