@@ -249,34 +249,29 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             return None
         return ioc_tag_labels(attrs.tags)
 
-    def _convert_file(self, entry: IOCDeltaEntry) -> Indicator | None:
-        """Convert a file IOC delta entry to a STIX Indicator with file observable."""
-        attrs = entry.attributes
-        if attrs is None:
-            return None
+    def _build_indicator(
+        self,
+        attrs: IOCDeltaAttributes,
+        name: str,
+        pattern: str,
+        observable_type: str,
+        reference: dict[str, str],
+    ) -> Indicator:
+        """Return the indicator of an IOC delta entry, with its observable created by OpenCTI.
 
-        hashes = {}
-        patterns = []
-        for hash_algo, hash_value in [
-            (HashAlgorithm.SHA256, attrs.sha256),
-            (HashAlgorithm.MD5, attrs.md5),
-            (HashAlgorithm.SHA1, attrs.sha1),
-        ]:
-            if hash_value is None:
-                continue
-            patterns.append(f"file:hashes.'{hash_algo.value}' = '{hash_value}'")
-            hashes[hash_algo] = hash_value
+        Args:
+            attrs: The entry attributes: score, description, labels and valid from date.
+            name: The indicator name.
+            pattern: The STIX pattern.
+            observable_type: The OpenCTI type of the main observable.
+            reference: The external reference to the GTI page of the IOC.
 
-        if not patterns:
-            return None
-
-        pattern = f"[{' OR '.join(patterns)}]"
-
+        """
         return Indicator(
-            name=attrs.meaningful_name if attrs.meaningful_name else entry.id,
+            name=name,
             pattern=pattern,
             pattern_type="stix",
-            main_observable_type="StixFile",
+            main_observable_type=observable_type,
             author=self.organization,
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
@@ -288,9 +283,36 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
                 else None
             ),
             create_observables=True,
-            external_references=[
-                ExternalReference(**gti_external_reference("file", entry.id))
-            ],
+            external_references=[ExternalReference(**reference)],
+        )
+
+    def _convert_file(self, entry: IOCDeltaEntry) -> Indicator | None:
+        """Convert a file IOC delta entry to a STIX Indicator with file observable."""
+        attrs = entry.attributes
+        if attrs is None:
+            return None
+
+        patterns = []
+        for hash_algo, hash_value in [
+            (HashAlgorithm.SHA256, attrs.sha256),
+            (HashAlgorithm.MD5, attrs.md5),
+            (HashAlgorithm.SHA1, attrs.sha1),
+        ]:
+            if hash_value is None:
+                continue
+            patterns.append(f"file:hashes.'{hash_algo.value}' = '{hash_value}'")
+
+        if not patterns:
+            return None
+
+        pattern = f"[{' OR '.join(patterns)}]"
+
+        return self._build_indicator(
+            attrs,
+            name=attrs.meaningful_name if attrs.meaningful_name else entry.id,
+            pattern=pattern,
+            observable_type="StixFile",
+            reference=gti_external_reference("file", entry.id),
         )
 
     def _detect_ip_version(self, ip_addr: str) -> str:
@@ -323,25 +345,12 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
         pattern = f"[{ip_version}-addr:value = '{entry.id}']"
         observable_type = "IPv4-Addr" if ip_version == "ipv4" else "IPv6-Addr"
 
-        return Indicator(
+        return self._build_indicator(
+            attrs,
             name=entry.id,
             pattern=pattern,
-            pattern_type="stix",
-            main_observable_type=observable_type,
-            author=self.organization,
-            markings=[self.tlp_marking],
-            score=self._get_score(attrs),
-            description=self._get_description(attrs),
-            labels=self._get_labels(attrs),
-            valid_from=(
-                datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
-                if attrs.creation_date
-                else None
-            ),
-            create_observables=True,
-            external_references=[
-                ExternalReference(**gti_external_reference("ip_address", entry.id))
-            ],
+            observable_type=observable_type,
+            reference=gti_external_reference("ip_address", entry.id),
         )
 
     def _convert_url(self, entry: IOCDeltaEntry) -> Indicator | None:
@@ -350,25 +359,12 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
         if attrs is None or attrs.url is None:
             return None
 
-        return Indicator(
+        return self._build_indicator(
+            attrs,
             name=attrs.url,
             pattern=f"[url:value = '{escape_pattern_value(attrs.url)}']",
-            pattern_type="stix",
-            main_observable_type="Url",
-            author=self.organization,
-            markings=[self.tlp_marking],
-            score=self._get_score(attrs),
-            description=self._get_description(attrs),
-            labels=self._get_labels(attrs),
-            valid_from=(
-                datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
-                if attrs.creation_date
-                else None
-            ),
-            create_observables=True,
-            external_references=[
-                ExternalReference(**gti_external_reference("url", entry.id, attrs.url))
-            ],
+            observable_type="Url",
+            reference=gti_external_reference("url", entry.id, attrs.url),
         )
 
     def _convert_domain(self, entry: IOCDeltaEntry) -> Indicator | None:
@@ -377,25 +373,12 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
         if attrs is None:
             return None
 
-        return Indicator(
+        return self._build_indicator(
+            attrs,
             name=entry.id,
             pattern=f"[domain-name:value = '{escape_pattern_value(entry.id)}']",
-            pattern_type="stix",
-            main_observable_type="Domain-Name",
-            author=self.organization,
-            markings=[self.tlp_marking],
-            score=self._get_score(attrs),
-            description=self._get_description(attrs),
-            labels=self._get_labels(attrs),
-            valid_from=(
-                datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
-                if attrs.creation_date
-                else None
-            ),
-            create_observables=True,
-            external_references=[
-                ExternalReference(**gti_external_reference("domain", entry.id))
-            ],
+            observable_type="Domain-Name",
+            reference=gti_external_reference("domain", entry.id),
         )
 
     def _build_relationships(
