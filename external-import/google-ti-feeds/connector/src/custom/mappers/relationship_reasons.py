@@ -39,7 +39,21 @@ STIX_TYPE_LABELS = {
 def type_label(obj: Any) -> str:
     """Return the label of the STIX type of an object, e.g. 'intrusion set'."""
     stix_type = str(getattr(obj, "type", "object"))
+    if stix_type == "location" and (
+        location_type := _get(obj, "x_opencti_location_type")
+    ):
+        return str(location_type).lower()
+    if stix_type == "identity" and _get(obj, "identity_class") == "class":
+        return "sector"
     return STIX_TYPE_LABELS.get(stix_type, stix_type.replace("-", " "))
+
+
+def _get(obj: Any, field: str) -> Any:
+    """Return a field of a STIX object, custom properties included."""
+    value = getattr(obj, field, None)
+    if value is None and hasattr(obj, "get"):
+        value = obj.get(field)
+    return value
 
 
 def display_name(obj: Any) -> str:
@@ -106,6 +120,61 @@ def ip_country_reason(country_name: str, country_code: str) -> str:
         f"Stated by GTI: GTI geolocates this IP in {country_name} "
         f"(country code {country_code})."
     )
+
+
+# (relationship type, target STIX type) -> GTI list the target comes from.
+TARGETING_LISTS = {
+    ("targets", "location"): "targeted regions",
+    ("targets", "identity"): "targeted industries",
+    ("originates-from", "location"): "source regions",
+}
+
+
+def targeting_reason(
+    source: Any, relationship_type: str, target: Any, timing: Any
+) -> str | None:
+    """Description of a targets or originates-from link: the GTI confidence and note.
+
+    The GTI confidence and note are GTI content, written even when relationship
+    descriptions are disabled. With them enabled, the GTI list the target comes
+    from is stated first.
+
+    Args:
+        source: The intrusion set, malware, tool or campaign.
+        relationship_type: 'targets' or 'originates-from'.
+        target: The location or sector.
+        timing: The `LocationWithTiming` or `IdentityWithTiming` of the target.
+
+    Returns:
+        The description, or None when disabled and GTI gives no confidence or note.
+
+    """
+    confidence = getattr(timing, "confidence", None)
+    note = (getattr(timing, "note", None) or "").strip()
+    supplier = getattr(timing, "source", None)
+    if not _SETTINGS["enabled"]:
+        gti_content = [
+            f"GTI confidence: {confidence}." if confidence else "",
+            f"Source: {supplier}." if supplier else "",
+            note,
+        ]
+        return " ".join(part for part in gti_content if part) or None
+
+    gti_list = TARGETING_LISTS.get(
+        (relationship_type, str(getattr(target, "type", ""))), "related objects"
+    )
+    reason = (
+        f"Stated by GTI: GTI lists {describe(target)} among the {gti_list} "
+        f"of {describe(source)}"
+    )
+    if confidence:
+        reason += f", with confidence '{confidence}'"
+    if supplier:
+        reason += f", source '{supplier}'"
+    reason += "."
+    if note:
+        reason += f" GTI note: {note}"
+    return reason
 
 
 def co_occurrence_reason(source: Any, target: Any, container: Any | None) -> str:

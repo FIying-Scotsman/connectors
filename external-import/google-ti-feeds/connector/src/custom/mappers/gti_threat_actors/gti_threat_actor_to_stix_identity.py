@@ -88,7 +88,6 @@ class GTIThreatActorToSTIXIdentity(BaseMapper):
 
         sector = OctiIdentitySectorModel.create(
             name=sector_name,
-            description=industry_data.description,
             organization_id=self.organization.id,
             marking_ids=[self.tlp_marking.id],
         )
@@ -110,6 +109,9 @@ class GTIThreatActorToSTIXIdentity(BaseMapper):
 
         return IdentityWithTiming(
             identity=sector.to_stix2_object(),
+            confidence=industry_data.confidence,
+            note=industry_data.description,
+            source=industry_data.source,
             first_seen=first_seen,
             last_seen=last_seen,
         )

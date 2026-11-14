@@ -1,4 +1,7 @@
-"""STIX locations and sectors paired with the dates GTI associated them with an entity."""
+"""STIX locations and sectors paired with how GTI associated them with an entity.
+
+Dates become the relationship start and stop times, confidence and note its description.
+"""
 
 from datetime import datetime
 
@@ -12,6 +15,9 @@ class LocationWithTiming(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
     location: Location
+    confidence: str | None = None  # GTI confidence, e.g. "confirmed"
+    note: str | None = None  # GTI description of the association
+    source: str | None = None  # GTI information supplier
     first_seen: datetime | None = None
     last_seen: datetime | None = None
     is_targeted: bool = False
@@ -24,5 +30,8 @@ class IdentityWithTiming(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
     identity: Identity
+    confidence: str | None = None  # GTI confidence, e.g. "confirmed"
+    note: str | None = None  # GTI description of the association
+    source: str | None = None  # GTI information supplier
     first_seen: datetime | None = None
     last_seen: datetime | None = None

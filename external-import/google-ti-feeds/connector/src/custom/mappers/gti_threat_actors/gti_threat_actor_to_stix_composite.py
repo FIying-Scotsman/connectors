@@ -12,6 +12,7 @@ from connector.src.custom.mappers.gti_threat_actors.gti_threat_actor_to_stix_int
 from connector.src.custom.mappers.gti_threat_actors.gti_threat_actor_to_stix_location import (
     GTIThreatActorToSTIXLocation,
 )
+from connector.src.custom.mappers.relationship_reasons import targeting_reason
 from connector.src.custom.mappers.timing_models import (
     IdentityWithTiming,
     LocationWithTiming,
@@ -138,6 +139,9 @@ class GTIThreatActorToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=location_with_timing.first_seen,
                 stop_time=location_with_timing.last_seen,
+                description=targeting_reason(
+                    intrusion_set, "targets", location, location_with_timing
+                ),
             )
             relationships.append(relationship)
 
@@ -156,6 +160,9 @@ class GTIThreatActorToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=location_with_timing.first_seen,
                 stop_time=location_with_timing.last_seen,
+                description=targeting_reason(
+                    intrusion_set, "originates-from", location, location_with_timing
+                ),
             )
             relationships.append(relationship)
 
@@ -171,6 +178,9 @@ class GTIThreatActorToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=sector_with_timing.first_seen,
                 stop_time=sector_with_timing.last_seen,
+                description=targeting_reason(
+                    intrusion_set, "targets", sector, sector_with_timing
+                ),
             )
             relationships.append(relationship)
 

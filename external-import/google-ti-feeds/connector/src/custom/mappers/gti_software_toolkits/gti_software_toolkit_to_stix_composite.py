@@ -12,6 +12,7 @@ from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_
 from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_stix_tool import (
     GTISoftwareToolkitToSTIXTool,
 )
+from connector.src.custom.mappers.relationship_reasons import targeting_reason
 from connector.src.custom.mappers.timing_models import (
     IdentityWithTiming,
     LocationWithTiming,
@@ -136,6 +137,9 @@ class GTISoftwareToolkitToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=location_with_timing.first_seen,
                 stop_time=location_with_timing.last_seen,
+                description=targeting_reason(
+                    tool, "targets", location, location_with_timing
+                ),
             )
             relationships.append(relationship)
 
@@ -154,6 +158,9 @@ class GTISoftwareToolkitToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=location_with_timing.first_seen,
                 stop_time=location_with_timing.last_seen,
+                description=targeting_reason(
+                    tool, "originates-from", location, location_with_timing
+                ),
             )
             relationships.append(relationship)
 
@@ -169,6 +176,9 @@ class GTISoftwareToolkitToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=sector_with_timing.first_seen,
                 stop_time=sector_with_timing.last_seen,
+                description=targeting_reason(
+                    tool, "targets", sector, sector_with_timing
+                ),
             )
             relationships.append(relationship)
 

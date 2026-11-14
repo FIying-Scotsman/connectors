@@ -102,7 +102,6 @@ class GTIThreatActorToSTIXLocation(BaseMapper):
         country = OctiLocationModel.create_country(
             name=region_data.country,
             country_code=region_data.country_iso2,
-            description=region_data.description,
             organization_id=self.organization.id,
             marking_ids=[self.tlp_marking.id],
         )
@@ -122,6 +121,9 @@ class GTIThreatActorToSTIXLocation(BaseMapper):
 
         return LocationWithTiming(
             location=country.to_stix2_object(),
+            confidence=region_data.confidence,
+            note=region_data.description,
+            source=region_data.source,
             first_seen=first_seen,
             last_seen=last_seen,
             is_targeted=is_targeted,

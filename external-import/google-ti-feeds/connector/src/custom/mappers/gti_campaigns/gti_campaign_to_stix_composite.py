@@ -12,6 +12,7 @@ from connector.src.custom.mappers.gti_campaigns.gti_campaign_to_stix_identity im
 from connector.src.custom.mappers.gti_campaigns.gti_campaign_to_stix_location import (
     GTICampaignToSTIXLocation,
 )
+from connector.src.custom.mappers.relationship_reasons import targeting_reason
 from connector.src.custom.mappers.timing_models import (
     IdentityWithTiming,
     LocationWithTiming,
@@ -137,6 +138,9 @@ class GTICampaignToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=location_with_timing.first_seen,
                 stop_time=location_with_timing.last_seen,
+                description=targeting_reason(
+                    campaign, "targets", location, location_with_timing
+                ),
             )
             relationships.append(relationship)
 
@@ -156,6 +160,9 @@ class GTICampaignToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=location_with_timing.first_seen,
                 stop_time=location_with_timing.last_seen,
+                description=targeting_reason(
+                    campaign, "originates-from", location, location_with_timing
+                ),
             )
             relationships.append(relationship)
 
@@ -172,6 +179,9 @@ class GTICampaignToSTIXComposite(BaseMapper):
                 modified=modified,
                 start_time=identity_with_timing.first_seen,
                 stop_time=identity_with_timing.last_seen,
+                description=targeting_reason(
+                    campaign, "targets", identity, identity_with_timing
+                ),
             )
             relationships.append(relationship)
 
