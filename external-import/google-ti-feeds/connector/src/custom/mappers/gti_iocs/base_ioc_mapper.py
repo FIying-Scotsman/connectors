@@ -41,7 +41,7 @@ class GTIIOCData(Protocol):
 IOCData = TypeVar("IOCData", bound=GTIIOCData)
 
 # Objects describing the IOC itself, not linked to the report, campaign or threat it comes from.
-IOC_CONTEXT_ONLY_TYPES = ("autonomous-system",)
+IOC_CONTEXT_ONLY_TYPES = ("autonomous-system", "location")
 
 
 class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
@@ -224,7 +224,13 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         """
         if not self.extended_descriptions:
             return None
-        return build_ioc_description(self.ioc.attributes)
+        return build_ioc_description(
+            self.ioc.attributes, self._natively_linked_fields()
+        )
+
+    def _natively_linked_fields(self) -> frozenset[str]:
+        """Return the fields imported as linked objects, left out of the description."""
+        return frozenset()
 
     def _get_score(self) -> int | None:
         """Get the score computed with the configured scoring strategy.

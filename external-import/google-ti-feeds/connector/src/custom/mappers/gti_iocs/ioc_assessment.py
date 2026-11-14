@@ -1,5 +1,6 @@
 """Markdown summary of a GTI assessment, for IOC descriptions."""
 
+from collections.abc import Collection
 from typing import Any
 
 from connector.src.custom.mappers.description_details import (
@@ -141,37 +142,57 @@ def build_assessment_description(gti_assessment: Any) -> str | None:
     )
 
 
-def network_details_section(attributes: Any) -> str | None:
+def network_details_section(
+    attributes: Any, linked_fields: Collection[str] = ()
+) -> str | None:
     """Return the network details of an IP IOC: country, ASN, range, registry.
 
     Fields missing on an IOC type are skipped, so other types give None.
+
+    Args:
+        attributes: GTI IOC attributes.
+        linked_fields: Fields imported as linked objects, left out: 'country' (Country
+            location), 'asn' (autonomous system, with its owner and registry).
+
     """
     asn = getattr(attributes, "asn", None)
     as_owner = getattr(attributes, "as_owner", None)
     autonomous_system = None
-    if asn is not None:
+    if asn is not None and "asn" not in linked_fields:
         autonomous_system = f"AS{asn} ({as_owner})" if as_owner else f"AS{asn}"
+    country = (
+        None if "country" in linked_fields else getattr(attributes, "country", None)
+    )
+    registry = None
+    if "asn" not in linked_fields:
+        registry = getattr(attributes, "regional_internet_registry", None)
     return details_section(
         "GTI network details",
         {
-            "Country": getattr(attributes, "country", None),
+            "Country": country,
             "Continent": getattr(attributes, "continent", None),
             "Autonomous system": autonomous_system,
             "Network": getattr(attributes, "network", None),
-            "Regional internet registry": getattr(
-                attributes, "regional_internet_registry", None
-            ),
+            "Regional internet registry": registry,
         },
     )
 
 
-def build_ioc_description(attributes: Any) -> str | None:
-    """Return the GTI assessment description, then the network details of IPs."""
+def build_ioc_description(
+    attributes: Any, linked_fields: Collection[str] = ()
+) -> str | None:
+    """Return the GTI assessment description, then the network details of IPs.
+
+    Args:
+        attributes: GTI IOC attributes.
+        linked_fields: See `network_details_section`.
+
+    """
     if attributes is None:
         return None
     return join_sections(
         build_assessment_description(getattr(attributes, "gti_assessment", None)),
-        network_details_section(attributes),
+        network_details_section(attributes, linked_fields),
     )
 
 

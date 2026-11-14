@@ -4,12 +4,14 @@ import ipaddress
 from datetime import datetime, timezone
 from typing import Any
 
+import pycountry
 from connector.src.custom.mappers.gti_iocs.base_ioc_mapper import BaseIOCMapper
 from connector.src.custom.models.gti.gti_ip_addresses_model import (
     GTIIPData,
 )
 from connector.src.stix.octi.models.ipv4_address_model import OctiIPv4AddressModel
 from connector.src.stix.octi.models.ipv6_address_model import OctiIPv6AddressModel
+from connector.src.stix.octi.models.location_model import OctiLocationModel
 from connector.src.stix.octi.observable_type_ov_enum import ObservableTypeOV
 from connector.src.stix.v21.models.scos.as_model import AutonomousSystemModel
 from connector.src.stix.v21.models.scos.ipv4_address_model import IPv4AddressModel
@@ -18,7 +20,33 @@ from stix2 import (  # type: ignore[import-untyped]
     AutonomousSystem,
     IPv4Address,
     IPv6Address,
+    Location,
 )
+
+
+def country_from_code(code: str | None) -> tuple[str, list[str]] | None:
+    """Return the country name and aliases of an ISO 3166-1 alpha-2 code.
+
+    The name is the common name when pycountry has one ('Taiwan'), else the ISO
+    name. Aliases hold the other names and the codes, so OpenCTI can match a
+    country it already knows under another name.
+
+    Returns:
+        (name, aliases), or None for an unknown or missing code.
+
+    """
+    country = pycountry.countries.get(alpha_2=code) if code else None
+    if country is None:
+        return None
+    name = getattr(country, "common_name", None) or country.name
+    candidates = (
+        country.name,
+        getattr(country, "official_name", None),
+        country.alpha_2,
+        country.alpha_3,
+    )
+    aliases = [alias for alias in dict.fromkeys(candidates) if alias and alias != name]
+    return name, aliases
 
 
 class GTIIPToSTIXIP(BaseIOCMapper[GTIIPData]):
@@ -26,17 +54,25 @@ class GTIIPToSTIXIP(BaseIOCMapper[GTIIPData]):
 
     ioc_type = "ip_address"
 
-    def __init__(self, *args: Any, ip_link_to_asn: bool = False, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        ip_link_to_asn: bool = False,
+        ip_link_to_country: bool = False,
+        **kwargs: Any,
+    ) -> None:
         """Initialize the mapper.
 
         Args:
             *args: See `BaseIOCMapper`.
             ip_link_to_asn: Whether to link the IP to its autonomous system.
+            ip_link_to_country: Whether to link the IP to its country.
             **kwargs: See `BaseIOCMapper`.
 
         """
         super().__init__(*args, **kwargs)
         self.ip_link_to_asn = ip_link_to_asn
+        self.ip_link_to_country = ip_link_to_country
 
     @property
     def ip(self) -> GTIIPData:
@@ -44,23 +80,57 @@ class GTIIPToSTIXIP(BaseIOCMapper[GTIIPData]):
         return self.ioc
 
     def to_stix(self) -> list[Any]:
-        """Convert the GTI IP, adding its autonomous system when enabled.
+        """Convert the GTI IP, adding its autonomous system and country when enabled.
 
         Returns:
-            list[Any]: The objects of `BaseIOCMapper.to_stix`, then the autonomous
-                system and the 'belongs-to' relationship from the IP.
+            list[Any]: The objects of `BaseIOCMapper.to_stix`, then each linked
+                object followed by its relationship from the IP: 'belongs-to' the
+                autonomous system, 'located-at' the country.
 
         """
         stix_objects = super().to_stix()
-        autonomous_system = self._create_autonomous_system()
-        if autonomous_system is None:
-            return stix_objects
         observable = stix_objects[0]
-        return [
-            *stix_objects,
-            autonomous_system,
-            self._create_ioc_relationship("belongs-to", observable, autonomous_system),
-        ]
+        links = (
+            ("belongs-to", self._create_autonomous_system()),
+            ("located-at", self._create_country()),
+        )
+        for relationship_type, target in links:
+            if target is not None:
+                stix_objects.append(target)
+                stix_objects.append(
+                    self._create_ioc_relationship(relationship_type, observable, target)
+                )
+        return stix_objects
+
+    def _natively_linked_fields(self) -> frozenset[str]:
+        """Return the network fields carried by linked objects, left out of the description."""
+        fields = set()
+        if self._create_autonomous_system() is not None:
+            fields.add("asn")
+        if self._create_country() is not None:
+            fields.add("country")
+        return frozenset(fields)
+
+    def _create_country(self) -> Location | None:
+        """Create the Country location of the IP when enabled and the code is known."""
+        attributes = self.ip.attributes
+        code = attributes.country if attributes else None
+        if not self.ip_link_to_country or not code:
+            return None
+        country = country_from_code(code)
+        if country is None:
+            return None
+        name, aliases = country
+        timestamps = self._get_timestamps()
+        return OctiLocationModel.create_country(
+            name=name,
+            country_code=code,
+            organization_id=self.organization.id,
+            marking_ids=[self.tlp_marking.id],
+            custom_properties={"x_opencti_aliases": aliases},
+            created=timestamps["created"],
+            modified=timestamps["modified"],
+        ).to_stix2_object()
 
     def _create_autonomous_system(self) -> AutonomousSystem | None:
         """Create the autonomous system of the IP when enabled and known."""

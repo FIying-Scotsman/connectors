@@ -48,6 +48,13 @@ class GTISharedConfig(GTIBaseConfig):
         "'belongs-to'. Applies to the IPs of every data collection; the IOC deltas "
         "feed only imports indicators, so it is not affected.",
     )
+    ip_link_to_country: bool = Field(
+        default=False,
+        description="Whether to link IP address IOCs to the Country location of "
+        "their GTI country code with 'located-at'. Applies to the IPs of every data "
+        "collection; the IOC deltas feed only imports indicators, so it is not "
+        "affected. Unknown country codes are skipped.",
+    )
     ioc_import_threshold: int | None = Field(
         default=None,
         ge=1,
@@ -79,7 +86,8 @@ class GTISharedConfig(GTIBaseConfig):
         "OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and "
         "observables: GTI assessment (verdict, severity, threat score, summary, "
         "contributing factors), plus the country, autonomous system and network of "
-        "IP addresses. Vulnerabilities: risk rating, exploitation state, "
+        "IP addresses, except what ip_link_to_country and ip_link_to_asn import as "
+        "linked objects. Vulnerabilities: risk rating, exploitation state, "
         "exploit availability, exploitation consequence and vectors, remediation "
         "priority, exploitation dates, CISA KEV dates and ransomware use, "
         "mitigations. Malware families: targeted operating systems and detection "

@@ -18,6 +18,7 @@ gti:
   # indicator_min_verdict: any
   # ioc_tags_as_labels: false
   # ip_link_to_asn: false
+  # ip_link_to_country: false
   # ioc_import_threshold: 250
   # ioc_link_to_threats: false
   # intrusion_set_link_to_capabilities: false

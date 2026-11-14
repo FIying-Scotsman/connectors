@@ -38,7 +38,7 @@ MAPPER_OPTIONS: dict[str, tuple[str, ...]] = {
     "threat_actors": ("enable_threat_actor_aliases",),
     "vulnerabilities": ("extended_descriptions",),
     **dict.fromkeys(IOC_SUBENTITY_TYPES, IOC_MAPPER_OPTIONS),
-    "ip_addresses": (*IOC_MAPPER_OPTIONS, "ip_link_to_asn"),
+    "ip_addresses": (*IOC_MAPPER_OPTIONS, "ip_link_to_asn", "ip_link_to_country"),
 }
 
 
