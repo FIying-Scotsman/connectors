@@ -420,7 +420,7 @@
     },
     "GTI_ENABLE_THREAT_ACTOR_ALIASES": {
       "default": false,
-      "description": "Whether to enable importing threat actor aliases from GTI",
+      "description": "Whether to enable importing threat actor aliases from GTI: alternative names, then the names of the actors GTI merged into the threat actor (merged_actors).",
       "type": "boolean"
     },
     "GTI_THREAT_ACTOR_EXTRA_FILTERS": {

@@ -390,6 +390,7 @@ These fields are mapped directly onto the STIX Intrusion-Set object.
 | `first_seen_details`     | `first_seen`                                   | ISO 8601 timestamp (from `first_seen_details[0].value`)                                                            |
 | `last_seen_details`      | `last_seen`                                    | ISO 8601 timestamp (from `last_seen_details[0].value`)                                                             |
 | `alt_names_details`      | `aliases`                                      | From `alt_names_details[].value`. Requires `GTI_ENABLE_THREAT_ACTOR_ALIASES` to be enabled                         |
+| `merged_actors`          | `aliases`                                      | From `merged_actors[].value`, the actors GTI merged into this one. Requires `GTI_ENABLE_THREAT_ACTOR_ALIASES` to be enabled |
 | `tags_details`           | `labels`                                       | From `tags_details[].value`                                                                                        |
 | `creation_date`          | `created`                                      | UTC timestamp of object creation                                                                                   |
 | `last_modification_date` | `modified`                                     | UTC timestamp of last update                                                                                       |

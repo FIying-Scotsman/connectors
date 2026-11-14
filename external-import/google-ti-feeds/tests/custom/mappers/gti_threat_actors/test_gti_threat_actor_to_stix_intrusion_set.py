@@ -11,6 +11,7 @@ from connector.src.custom.mappers.gti_threat_actors.gti_threat_actor_to_stix_int
 from connector.src.custom.models.gti.gti_threat_actor_model import (
     AltNameDetail,
     GTIThreatActorData,
+    MergedActor,
     Motivation,
     SeenDetail,
     TagDetail,
@@ -77,6 +78,8 @@ class ThreatActorModelFactory(ModelFactory[ThreatActorModel]):
     __model__ = ThreatActorModel
 
     name = "Test Threat Actor"
+    # Merged actors become aliases: random ones would change the alias assertions.
+    merged_actors = None
     creation_date = 1672531200
     last_modification_date = 1672617600
     description = "A test threat actor"
@@ -1062,3 +1065,37 @@ def test_threat_actor_boundary_timestamps(
     expected_modified = datetime.fromtimestamp(modification_date, tz=timezone.utc)
     assert stix_intrusion_set.created == expected_created  # noqa: S101
     assert stix_intrusion_set.modified == expected_modified  # noqa: S101
+
+
+def test_extract_aliases_includes_merged_actors() -> None:
+    """Merged actors follow the alternative names, without duplicates or the name."""
+    # Given a threat actor with alternative names and merged actors
+    attributes = ThreatActorModelFactory.build(
+        name="APT Example",
+        alt_names_details=[
+            AltNameDetailFactory.build(value="Example Group (Vendor)"),
+        ],
+        merged_actors=[
+            MergedActor(confidence="confirmed", value="UNC1234"),
+            MergedActor(confidence="confirmed", value="Example Group"),
+            MergedActor(confidence="confirmed", value="APT Example"),
+        ],
+    )
+    # When the aliases are extracted
+    aliases = GTIThreatActorToSTIXIntrusionSet._extract_aliases(attributes)
+    # Then the merged actors are added once, without the actor's own name
+    assert aliases == ["Example Group", "UNC1234"]  # noqa: S101
+
+
+def test_extract_aliases_from_merged_actors_only() -> None:
+    """Merged actors are aliases even without alternative names."""
+    # Given a threat actor with merged actors only
+    attributes = ThreatActorModelFactory.build(
+        alt_names_details=None,
+        merged_actors=[MergedActor(confidence="confirmed", value="UNC1234")],
+    )
+    # When the aliases are extracted
+    # Then the merged actor is an alias
+    assert GTIThreatActorToSTIXIntrusionSet._extract_aliases(  # noqa: S101
+        attributes
+    ) == ["UNC1234"]
