@@ -15,6 +15,7 @@ from connector.src.custom.configs.converter_config import (
 from connector.src.custom.configs.gti_config_common import IOC_SUBENTITY_TYPES
 from connector.src.custom.mappers.relationship_reasons import (
     co_occurrence_reason,
+    display_name,
     optional_reason,
     set_relationship_descriptions,
 )
@@ -45,6 +46,21 @@ MAPPER_OPTIONS: dict[str, tuple[str, ...]] = {
     **dict.fromkeys(IOC_SUBENTITY_TYPES, IOC_MAPPER_OPTIONS),
     "ip_addresses": (*IOC_MAPPER_OPTIONS, "ip_link_to_asn", "ip_link_to_country"),
 }
+
+
+def ioc_data_by_value(subentities: Mapping[str, list[Any]]) -> dict[str, Any]:
+    """Index the GTI IOCs of a report or campaign by the value naming their STIX objects.
+
+    Domains, IPs and files by their GTI ID (the value or SHA-256), URLs by URL.
+    """
+    index: dict[str, Any] = {}
+    for ioc_type in IOC_SUBENTITY_TYPES:
+        for ioc in subentities.get(ioc_type) or []:
+            url = getattr(getattr(ioc, "attributes", None), "url", None)
+            key = url if ioc_type == "urls" and url else getattr(ioc, "id", None)
+            if key:
+                index[key] = ioc
+    return index
 
 
 INTRUSION_SET_CAPABILITY_RELATIONSHIP_TYPES = {
@@ -263,6 +279,7 @@ class BaseConvertToSTIX:
         stix_objects: list[Any],
         relationship_types: Mapping[tuple[str, str], str],
         container: Any | None = None,
+        ioc_data: Mapping[str, Any] | None = None,
     ) -> list[RelationshipModel]:
         """Link entities converted for the same report or campaign.
 
@@ -273,6 +290,8 @@ class BaseConvertToSTIX:
             stix_objects: Converted sub-entities of a single report or campaign.
             relationship_types: Relationship type keyed by (source, target) STIX type.
             container: The report or campaign, named in the descriptions.
+            ioc_data: GTI IOCs by value (see `ioc_data_by_value`): the GTI
+                evidence of an IOC supporting a link is added to its description.
 
         Returns:
             The created relationships.
@@ -293,7 +312,12 @@ class BaseConvertToSTIX:
                 organization_id=self.organization.id,
                 marking_ids=[self.tlp_marking.id],
                 description=optional_reason(
-                    co_occurrence_reason(source, target, container)
+                    co_occurrence_reason(
+                        source,
+                        target,
+                        container,
+                        (ioc_data or {}).get(display_name(source)),
+                    )
                 ),
                 created=now,
                 modified=now,

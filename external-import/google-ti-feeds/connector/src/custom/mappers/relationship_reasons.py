@@ -279,10 +279,32 @@ def ioc_threat_evidence(
     return f"Evidence: {'; '.join(parts)}." if parts else None
 
 
-def co_occurrence_reason(source: Any, target: Any, container: Any | None) -> str:
-    """Reason for a link between two entities of the same report or campaign."""
+def co_occurrence_reason(
+    source: Any, target: Any, container: Any | None, source_ioc: Any = None
+) -> str:
+    """Reason for a link between two entities of the same report or campaign.
+
+    Args:
+        source: Source of the relationship.
+        target: Target of the relationship.
+        container: The report or campaign referencing both.
+        source_ioc: GTI data of the source when it is an IOC: its GTI evidence
+            supporting a link to the target is appended.
+
+    """
     where = describe(container) if container is not None else "a GTI report or campaign"
-    return (
+    reason = (
         f"Inferred by the connector, not stated by GTI: {describe(source)} and "
         f"{describe(target)} are both referenced by {where}."
     )
+    attributes = getattr(source_ioc, "attributes", None)
+    if attributes is None:
+        return reason
+    evidence = ioc_threat_evidence(
+        getattr(attributes, "gti_assessment", None),
+        getattr(target, "type", None),
+        getattr(target, "name", None),
+        gti_collection_id(target),
+        getattr(attributes, "sandbox_verdicts", None),
+    )
+    return f"{reason} {evidence}" if evidence else reason

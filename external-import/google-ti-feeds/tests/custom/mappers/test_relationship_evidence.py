@@ -12,8 +12,12 @@ from connector.src.custom.configs.converter_config_common import (
     related_to_relationship,
     set_context,
 )
+from connector.src.custom.convert_to_stix.convert_to_stix_base import ioc_data_by_value
 from connector.src.custom.convert_to_stix.indicator.convert_to_stix_indicator import (
     ConvertToSTIXIndicator,
+)
+from connector.src.custom.convert_to_stix.report.convert_to_stix_report import (
+    ConvertToSTIXReport,
 )
 from connector.src.custom.mappers.gti_iocs.gti_domain_to_stix_domain import (
     GTIDomainToSTIXDomain,
@@ -301,4 +305,56 @@ def test_collection_file_link_quotes_sandbox() -> None:
     # Then the sandbox is quoted
     assert mapper.relationship_evidence(malware) == (  # noqa: S101
         "Evidence: sandbox 'Zenbox' detects emotet (malicious)."
+    )
+
+
+def test_ioc_data_by_value() -> None:
+    """IOCs are indexed by GTI ID, URLs by URL."""
+    # Given report IOCs
+    domain = GTIDomainData(id="example.com", type="domain", attributes=DomainModel())
+    url = MagicMock(id="url-id", attributes=MagicMock(url="http://example.com/a"))
+    # When they are indexed
+    index = ioc_data_by_value({"domains": [domain], "urls": [url], "reports": [1]})
+    # Then each is found by the value naming its STIX objects
+    assert index == {"example.com": domain, "http://example.com/a": url}  # noqa: S101
+
+
+def test_co_occurrence_link_quotes_ioc_evidence() -> None:
+    """A report IOC linked to an actor of the report quotes the card naming the actor."""
+    # Given a report domain with a card attributing it to APT1, and APT1
+    organization = Identity(  # pylint: disable=W9101  # it's a test no real ingest
+        name="Test Organization", identity_class="organization"
+    )
+    marking = MarkingDefinition(
+        id=f"marking-definition--{uuid4()}",
+        definition_type="statement",
+        definition={"statement": "Internal Use Only"},
+    )
+    domain = GTIDomainData(
+        id="example.com",
+        type="domain",
+        attributes=DomainModel(gti_assessment=_assessment()),
+    )
+    _, indicator, _ = GTIDomainToSTIXDomain(domain, organization, marking).to_stix()
+    intrusion_set = OctiIntrusionSetModel.create(
+        name="APT1", organization_id=organization.id, marking_ids=[]
+    )
+    converter = ConvertToSTIXReport(
+        config=MagicMock(relationship_descriptions=True),
+        logger=logging.getLogger(__name__),
+        tlp_level="white",
+    )
+    # When they are linked as co-occurring in the report
+    (relationship,) = converter.create_co_occurrence_relationships(
+        [indicator, intrusion_set],
+        {("indicator", "intrusion-set"): "indicates"},
+        ioc_data=ioc_data_by_value({"domains": [domain]}),
+    )
+    # Then the inferred link also quotes the GTI evidence
+    assert relationship.description.startswith(  # noqa: S101
+        "Inferred by the connector, not stated by GTI:"
+    )
+    assert relationship.description.endswith(  # noqa: S101
+        "Evidence: GTI explanation card 'Attributed to Mandiant Threat Actor' "
+        "(high influence)."
     )

@@ -8,6 +8,9 @@ from connector.src.custom.configs import CAMPAIGN_BATCH_PROCESSOR_CONFIG
 from connector.src.custom.convert_to_stix.campaign.convert_to_stix_campaign import (
     ConvertToSTIXCampaign,
 )
+from connector.src.custom.convert_to_stix.convert_to_stix_base import (
+    ioc_data_by_value,
+)
 from connector.src.custom.orchestrators.collection_orchestrator import (
     CollectionOrchestrator,
 )
@@ -39,7 +42,10 @@ class OrchestratorCampaign(CollectionOrchestrator):
         return self.client_api.real_total_campaigns
 
     def _link_co_occurring_entities(
-        self, main_entities: list[Any], subentity_stix: list[Any]
+        self,
+        main_entities: list[Any],
+        subentity_stix: list[Any],
+        subentities: dict[str, list[Any]] | None = None,
     ) -> list[Any]:
         """Create the enabled co-occurrence relationships.
 
@@ -47,6 +53,7 @@ class OrchestratorCampaign(CollectionOrchestrator):
 
         Args:
             main_entities: STIX objects of the campaign.
+            subentities: GTI sub-entities, for the IOC evidence.
             subentity_stix: Converted sub-entities of the campaign.
 
         Returns:
@@ -62,4 +69,5 @@ class OrchestratorCampaign(CollectionOrchestrator):
             subentity_stix,
             relationship_types,
             container=self._main_entity(main_entities, "campaign"),
+            ioc_data=ioc_data_by_value(subentities or {}),
         )

@@ -7,6 +7,9 @@ from datetime import timedelta
 from typing import Any
 
 from connector.src.custom.configs import REPORT_BATCH_PROCESSOR_CONFIG
+from connector.src.custom.convert_to_stix.convert_to_stix_base import (
+    ioc_data_by_value,
+)
 from connector.src.custom.convert_to_stix.report.convert_to_stix_report import (
     ConvertToSTIXReport,
 )
@@ -61,12 +64,16 @@ class OrchestratorReport(CollectionOrchestrator):
         return await self._attach_report_pdf(entity, all_entities)
 
     def _link_co_occurring_entities(
-        self, main_entities: list[Any], subentity_stix: list[Any]
+        self,
+        main_entities: list[Any],
+        subentity_stix: list[Any],
+        subentities: dict[str, list[Any]] | None = None,
     ) -> list[Any]:
         """Create the enabled co-occurrence relationships and add them to the report.
 
         Args:
             main_entities: STIX objects of the report, including the report.
+            subentities: GTI sub-entities, for the IOC evidence.
             subentity_stix: Converted sub-entities of the report.
 
         Returns:
@@ -80,7 +87,10 @@ class OrchestratorReport(CollectionOrchestrator):
             return []
         report = self._main_entity(main_entities, "report")
         relationships = self.converter.create_co_occurrence_relationships(
-            subentity_stix, relationship_types, container=report
+            subentity_stix,
+            relationship_types,
+            container=report,
+            ioc_data=ioc_data_by_value(subentities or {}),
         )
         if report is not None:
             GTIReportToSTIXReport.add_object_refs(

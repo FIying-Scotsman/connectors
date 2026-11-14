@@ -106,13 +106,17 @@ class CollectionOrchestrator(BaseOrchestrator, ABC):
         )
 
     def _link_co_occurring_entities(
-        self, main_entities: list[Any], subentity_stix: list[Any]
+        self,
+        main_entities: list[Any],
+        subentity_stix: list[Any],
+        subentities: dict[str, list[Any]] | None = None,
     ) -> list[Any]:
         """Return relationships between the sub-entities. None by default.
 
         Args:
             main_entities: STIX objects of the main entity.
             subentity_stix: Converted sub-entities of the main entity.
+            subentities: GTI sub-entities of the main entity, by type.
 
         Returns:
             The created relationships.
@@ -183,7 +187,7 @@ class CollectionOrchestrator(BaseOrchestrator, ABC):
                     )
                     if subentity_stix:
                         subentity_stix += self._link_co_occurring_entities(
-                            main_entities, subentity_stix
+                            main_entities, subentity_stix, subentities
                         )
 
                     all_entities = await self._finalize_entities(
