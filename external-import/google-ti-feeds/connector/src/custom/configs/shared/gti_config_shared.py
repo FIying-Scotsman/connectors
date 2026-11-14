@@ -34,3 +34,12 @@ class GTISharedConfig(GTIBaseConfig):
         "the API quota they would use; its other sub-entities are still imported. "
         "Leave unset to always fetch IOCs.",
     )
+    ioc_link_to_threats: bool = Field(
+        default=False,
+        description="Whether to link the IOCs of a report or campaign to the "
+        "intrusion sets and malware of that same report or campaign (and to its "
+        "campaigns, for reports): 'indicates' from indicators, 'related-to' from "
+        "observables. These relationships come from co-occurrence in the same "
+        "container, not from a GTI attribution, and their number is IOCs times "
+        "threats: combine with ioc_import_threshold on large containers.",
+    )

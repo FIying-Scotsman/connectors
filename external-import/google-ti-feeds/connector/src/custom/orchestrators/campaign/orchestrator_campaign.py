@@ -144,6 +144,16 @@ class OrchestratorCampaign(BaseOrchestrator):
                         )
                     )
 
+                    relationship_types = self._co_occurrence_relationship_types(
+                        ("intrusion-set", "malware")
+                    )
+                    if relationship_types and subentity_stix:
+                        subentity_stix += (
+                            self.converter.create_co_occurrence_relationships(
+                                subentity_stix, relationship_types
+                            )
+                        )
+
                     all_entities = campaign_entities + (subentity_stix or [])
 
                     entity_types: dict[str, int] = {}

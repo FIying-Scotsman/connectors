@@ -313,6 +313,7 @@ IOC options apply to the IOCs (files, domains, URLs, IP addresses) imported by a
 |-------------------------|----------------------------------------------------------|----------------|------------------------------------------------------|
 | `GTI_INDICATOR_SCORING` | Strategy used to compute the score of IOC indicators and observables | `threat_score` | `threat_score`, `gti_derived`, `average_detection` |
 | `GTI_IOC_IMPORT_THRESHOLD` | Maximum number of IOCs a report or campaign may reference for its IOCs to be fetched. Above it, the IOC sub-entities (`domains`, `files`, `urls`, `ip_addresses`) of that report or campaign are skipped and a warning is logged; its other sub-entities are still imported. Uses the `counters.iocs` value returned by GTI, so no extra API call is made | unset (disabled) | Integer `>= 1` |
+| `GTI_IOC_LINK_TO_THREATS` | Link the IOCs of a report or campaign to the intrusion sets and malware of that same report or campaign (and to its campaigns, for reports). See below | `false` | `true` / `false` |
 
 Scoring strategies:
 
@@ -323,6 +324,15 @@ Scoring strategies:
 | `average_detection` | Share of AV engines flagging the IOC in `last_analysis_stats`: `(malicious + 0.5 × suspicious) / (malicious + suspicious + harmless + undetected) × 100`       |
 
 When the selected strategy has no data for an IOC (unknown verdict, no analysis stats), `threat_score` is used. The IOC Delta feed does not provide `last_analysis_stats`, so `average_detection` always uses `threat_score` for it.
+
+Relationships created by `GTI_IOC_LINK_TO_THREATS`:
+
+| STIX Source Object | STIX Relationship | STIX Target Object                                  |
+|--------------------|-------------------|-----------------------------------------------------|
+| Indicator          | `indicates`       | Intrusion-Set, Malware, Campaign (reports only)     |
+| Observable         | `related-to`      | Intrusion-Set, Malware, Campaign (reports only)     |
+
+These relationships are inferred from the IOC and the threat appearing in the same report or campaign, not from a GTI attribution of the IOC. For reports, they are also added to the report `object_refs`. Their number is the number of IOCs times the number of threats, so set `GTI_IOC_IMPORT_THRESHOLD` when importing large reports or campaigns.
 
 ---
 

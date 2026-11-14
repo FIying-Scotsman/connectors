@@ -12,6 +12,9 @@ from connector.src.custom.configs import (
 from connector.src.custom.convert_to_stix.report.convert_to_stix_report import (
     ConvertToSTIXReport,
 )
+from connector.src.custom.mappers.gti_reports.gti_report_to_stix_report import (
+    GTIReportToSTIXReport,
+)
 from connector.src.custom.models.gti.gti_attack_technique_id_model import (
     GTIAttackTechniqueIDData,
 )
@@ -140,6 +143,11 @@ class OrchestratorReport(BaseOrchestrator):
                         )
                     )
 
+                    if subentity_stix:
+                        subentity_stix += self._link_co_occurring_entities(
+                            report_entities, subentity_stix
+                        )
+
                     all_entities = report_entities + (subentity_stix or [])
 
                     if self.config.report_download_pdf:
@@ -174,6 +182,34 @@ class OrchestratorReport(BaseOrchestrator):
                     )
         finally:
             self._flush_batch_processor()
+
+    def _link_co_occurring_entities(
+        self, report_entities: list[Any], subentity_stix: list[Any]
+    ) -> list[Any]:
+        """Create the enabled co-occurrence relationships and add them to the report.
+
+        Args:
+            report_entities: STIX objects of the report, including the report.
+            subentity_stix: Converted sub-entities of the report.
+
+        Returns:
+            The created relationships.
+
+        """
+        relationship_types = self._co_occurrence_relationship_types(
+            ("intrusion-set", "malware", "campaign")
+        )
+        if not relationship_types:
+            return []
+        relationships = self.converter.create_co_occurrence_relationships(
+            subentity_stix, relationship_types
+        )
+        for entity in report_entities:
+            if getattr(entity, "type", None) == "report":
+                GTIReportToSTIXReport.add_object_refs(
+                    [relationship.id for relationship in relationships], entity
+                )
+        return relationships
 
     def _update_index_inplace(self) -> None:
         """Update the work message to reflect current report progress."""
