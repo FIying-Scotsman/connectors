@@ -5,13 +5,15 @@ from typing import Any
 
 from connector.src.custom.mappers.gti_threat_actors.gti_threat_actor_to_stix_identity import (
     GTIThreatActorToSTIXIdentity,
-    IdentityWithTiming,
 )
 from connector.src.custom.mappers.gti_threat_actors.gti_threat_actor_to_stix_intrusion_set import (
     GTIThreatActorToSTIXIntrusionSet,
 )
 from connector.src.custom.mappers.gti_threat_actors.gti_threat_actor_to_stix_location import (
     GTIThreatActorToSTIXLocation,
+)
+from connector.src.custom.mappers.timing_models import (
+    IdentityWithTiming,
     LocationWithTiming,
 )
 from connector.src.custom.models.gti.gti_threat_actor_model import GTIThreatActorData

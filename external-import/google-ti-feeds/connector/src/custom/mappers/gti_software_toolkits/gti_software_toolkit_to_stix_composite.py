@@ -5,14 +5,16 @@ from typing import Any
 
 from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_stix_identity import (
     GTISoftwareToolkitToSTIXIdentity,
-    IdentityWithTiming,
 )
 from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_stix_location import (
     GTISoftwareToolkitToSTIXLocation,
-    LocationWithTiming,
 )
 from connector.src.custom.mappers.gti_software_toolkits.gti_software_toolkit_to_stix_tool import (
     GTISoftwareToolkitToSTIXTool,
+)
+from connector.src.custom.mappers.timing_models import (
+    IdentityWithTiming,
+    LocationWithTiming,
 )
 from connector.src.custom.models.gti.gti_software_toolkit_model import (
     GTISoftwareToolkitData,

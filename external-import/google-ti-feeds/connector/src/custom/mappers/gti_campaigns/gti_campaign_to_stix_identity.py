@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 
+from connector.src.custom.mappers.timing_models import IdentityWithTiming
 from connector.src.custom.models.gti.gti_campaign_model import (
     GTICampaignData,
     TargetedIndustry,
@@ -12,18 +13,7 @@ from connectors_sdk.models import (  # type: ignore[import-untyped]
     OrganizationAuthor,
     TLPMarking,
 )
-from pydantic import BaseModel
 from stix2.v21 import Identity  # type: ignore
-
-
-class IdentityWithTiming(BaseModel):
-    """Container for a STIX Identity object with timing metadata."""
-
-    model_config = {"arbitrary_types_allowed": True}
-
-    identity: Identity
-    first_seen: datetime | None = None
-    last_seen: datetime | None = None
 
 
 class GTICampaignToSTIXIdentity(BaseMapper):

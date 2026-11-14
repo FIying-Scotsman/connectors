@@ -8,10 +8,12 @@ from connector.src.custom.mappers.gti_campaigns.gti_campaign_to_stix_campaign im
 )
 from connector.src.custom.mappers.gti_campaigns.gti_campaign_to_stix_identity import (
     GTICampaignToSTIXIdentity,
-    IdentityWithTiming,
 )
 from connector.src.custom.mappers.gti_campaigns.gti_campaign_to_stix_location import (
     GTICampaignToSTIXLocation,
+)
+from connector.src.custom.mappers.timing_models import (
+    IdentityWithTiming,
     LocationWithTiming,
 )
 from connector.src.custom.models.gti.gti_campaign_model import GTICampaignData

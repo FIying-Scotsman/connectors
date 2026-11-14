@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 
+from connector.src.custom.mappers.timing_models import LocationWithTiming
 from connector.src.custom.models.gti.gti_software_toolkit_model import (
     GTISoftwareToolkitData,
     SourceRegion,
@@ -13,20 +14,7 @@ from connectors_sdk.models import (
     OrganizationAuthor,
     TLPMarking,
 )
-from pydantic import BaseModel
 from stix2.v21 import Location
-
-
-class LocationWithTiming(BaseModel):
-    """Container for a STIX Location object with timing metadata."""
-
-    model_config = {"arbitrary_types_allowed": True}
-
-    location: Location
-    first_seen: datetime | None = None
-    last_seen: datetime | None = None
-    is_targeted: bool = False
-    is_source: bool = False
 
 
 class GTISoftwareToolkitToSTIXLocation(BaseMapper):
