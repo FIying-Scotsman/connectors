@@ -39,6 +39,13 @@ class IOCDeltaAttributes(BaseModel):
     size: int | None = Field(None)
     # URL fields
     url: str | None = Field(None)
+    # IP address fields
+    asn: int | None = Field(None)
+    as_owner: str | None = Field(None)
+    country: str | None = Field(None)
+    continent: str | None = Field(None)
+    network: str | None = Field(None)
+    regional_internet_registry: str | None = Field(None)
     # Common fields
     gti_assessment: GTIAssessment | None = Field(None)
     tags: list[str] | None = Field(None)

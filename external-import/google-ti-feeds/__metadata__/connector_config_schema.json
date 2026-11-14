@@ -580,7 +580,7 @@
     },
     "GTI_EXTENDED_DESCRIPTIONS": {
       "default": false,
-      "description": "Whether to append the GTI details that have no dedicated OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and observables: GTI assessment (verdict, severity, threat score, summary, contributing factors). Vulnerabilities: risk rating, exploitation state, exploit availability, exploitation consequence and vectors, remediation priority, exploitation dates, CISA KEV dates and ransomware use, mitigations. Malware families: targeted operating systems and detection names. The GTI description is kept and the details follow it. Can overwrite descriptions edited in OpenCTI, depending on the connector confidence level.",
+      "description": "Whether to append the GTI details that have no dedicated OpenCTI field to descriptions, as Markdown bullet lists. IOC indicators and observables: GTI assessment (verdict, severity, threat score, summary, contributing factors), plus the country, autonomous system and network of IP addresses. Vulnerabilities: risk rating, exploitation state, exploit availability, exploitation consequence and vectors, remediation priority, exploitation dates, CISA KEV dates and ransomware use, mitigations. Malware families: targeted operating systems and detection names. The GTI description is kept and the details follow it. Can overwrite descriptions edited in OpenCTI, depending on the connector confidence level.",
       "type": "boolean"
     }
   },

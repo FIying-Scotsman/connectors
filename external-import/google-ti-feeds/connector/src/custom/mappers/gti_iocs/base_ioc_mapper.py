@@ -9,7 +9,7 @@ from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
     indicator_types_from_verdict,
 )
 from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
-    build_assessment_description,
+    build_ioc_description,
     ioc_tag_labels,
     observable_description_properties,
 )
@@ -222,9 +222,9 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
             str | None: The description, None when disabled or empty
 
         """
-        if not self.extended_descriptions or not self.ioc.attributes:
+        if not self.extended_descriptions:
             return None
-        return build_assessment_description(self.ioc.attributes.gti_assessment)
+        return build_ioc_description(self.ioc.attributes)
 
     def _get_score(self) -> int | None:
         """Get the score computed with the configured scoring strategy.

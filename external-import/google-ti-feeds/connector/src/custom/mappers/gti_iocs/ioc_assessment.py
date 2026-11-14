@@ -141,6 +141,40 @@ def build_assessment_description(gti_assessment: Any) -> str | None:
     )
 
 
+def network_details_section(attributes: Any) -> str | None:
+    """Return the network details of an IP IOC: country, ASN, range, registry.
+
+    Fields missing on an IOC type are skipped, so other types give None.
+    """
+    asn = getattr(attributes, "asn", None)
+    as_owner = getattr(attributes, "as_owner", None)
+    autonomous_system = None
+    if asn is not None:
+        autonomous_system = f"AS{asn} ({as_owner})" if as_owner else f"AS{asn}"
+    return details_section(
+        "GTI network details",
+        {
+            "Country": getattr(attributes, "country", None),
+            "Continent": getattr(attributes, "continent", None),
+            "Autonomous system": autonomous_system,
+            "Network": getattr(attributes, "network", None),
+            "Regional internet registry": getattr(
+                attributes, "regional_internet_registry", None
+            ),
+        },
+    )
+
+
+def build_ioc_description(attributes: Any) -> str | None:
+    """Return the GTI assessment description, then the network details of IPs."""
+    if attributes is None:
+        return None
+    return join_sections(
+        build_assessment_description(getattr(attributes, "gti_assessment", None)),
+        network_details_section(attributes),
+    )
+
+
 def ioc_tag_labels(tags: list[str] | None) -> list[str] | None:
     """Return the GTI tags as labels, deduplicated in GTI order, or None."""
     return list(dict.fromkeys(tag for tag in tags or [] if tag)) or None

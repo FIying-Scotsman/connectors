@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from connector.src.custom.convert_to_stix.convert_to_stix_base import BaseConvertToSTIX
 from connector.src.custom.mappers.gti_iocs.gti_links import gti_external_reference
 from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
-    build_assessment_description,
+    build_ioc_description,
     ioc_tag_labels,
 )
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
@@ -215,7 +215,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
         """Build the GTI assessment description when enabled."""
         if not self.config.extended_descriptions:
             return None
-        return build_assessment_description(attrs.gti_assessment)
+        return build_ioc_description(attrs)
 
     def _get_labels(self, attrs: IOCDeltaAttributes) -> list[str] | None:
         """Return the GTI tags as labels when enabled."""
