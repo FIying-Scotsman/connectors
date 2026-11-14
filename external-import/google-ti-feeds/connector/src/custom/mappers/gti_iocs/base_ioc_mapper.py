@@ -227,6 +227,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
             getattr(context_entity, "type", None),
             getattr(context_entity, "name", None),
             gti_collection_id(context_entity),
+            getattr(self.ioc.attributes, "sandbox_verdicts", None),
         )
 
     def _get_labels(self) -> list[str] | None:

@@ -18,6 +18,9 @@ from connector.src.custom.convert_to_stix.indicator.convert_to_stix_indicator im
 from connector.src.custom.mappers.gti_iocs.gti_domain_to_stix_domain import (
     GTIDomainToSTIXDomain,
 )
+from connector.src.custom.mappers.gti_iocs.gti_file_to_stix_file import (
+    GTIFileToSTIXFile,
+)
 from connector.src.custom.mappers.relationship_reasons import (
     gti_collection_id,
     ioc_threat_evidence,
@@ -28,7 +31,9 @@ from connector.src.custom.models.gti.gti_domain_model import (
     DomainModel,
     GTIDomainData,
 )
+from connector.src.custom.models.gti.gti_file_model import FileModel, GTIFileData
 from connector.src.stix.octi.models.intrusion_set_model import OctiIntrusionSetModel
+from connector.src.stix.octi.models.malware_model import OctiMalwareModel
 from connector.src.utils.converters.generic_converter import GenericConverter
 from stix2.v21 import Identity, MarkingDefinition  # type: ignore
 
@@ -229,4 +234,71 @@ def test_delta_link_quotes_evidence() -> None:
     assert relationship.description.endswith(  # noqa: S101
         "Evidence: GTI explanation card 'Associated with Malware Family' "
         "(medium influence)."
+    )
+
+
+def test_sandbox_evidence_for_malware() -> None:
+    """File sandbox verdicts naming the malware family are quoted, others ignored."""
+    # Given sandbox verdicts of a file, one naming EMOTET
+    verdicts = FileModel(
+        sandbox_verdicts={
+            "Zenbox": {
+                "category": "malicious",
+                "confidence": 80,
+                "malware_names": ["Emotet"],
+                "sandbox_name": "Zenbox",
+            },
+            "Other": {"category": "malicious", "malware_names": ["TrickBot"]},
+        }
+    ).sandbox_verdicts
+    # When the evidence for the malware is built
+    # Then the matching sandbox is quoted
+    assert ioc_threat_evidence(
+        None, "malware", "EMOTET", None, verdicts
+    ) == (  # noqa: S101
+        "Evidence: sandbox 'Zenbox' detects Emotet (malicious, confidence 80)."
+    )
+    # And sandboxes are not evidence for other threat types
+    assert (  # noqa: S101
+        ioc_threat_evidence(None, "intrusion-set", "EMOTET", None, verdicts) is None
+    )
+
+
+def test_collection_file_link_quotes_sandbox() -> None:
+    """A malware family file link quotes the sandbox verdicts naming the family."""
+    # Given a file of a malware family, detected by a sandbox
+    organization = Identity(  # pylint: disable=W9101  # it's a test no real ingest
+        name="Test Organization", identity_class="organization"
+    )
+    marking = MarkingDefinition(
+        id=f"marking-definition--{uuid4()}",
+        definition_type="statement",
+        definition={"statement": "Internal Use Only"},
+    )
+    sha256 = "a" * 64
+    mapper = GTIFileToSTIXFile(
+        GTIFileData(
+            id=sha256,
+            type="file",
+            attributes=FileModel(
+                sha256=sha256,
+                sandbox_verdicts={
+                    "Zenbox": {"category": "malicious", "malware_names": ["emotet"]}
+                },
+            ),
+        ),
+        organization,
+        marking,
+    )
+    malware = OctiMalwareModel.create(
+        name="EMOTET",
+        is_family=True,
+        malware_types=[],
+        organization_id=organization.id,
+        marking_ids=[],
+    )
+    # When the evidence for the malware is read
+    # Then the sandbox is quoted
+    assert mapper.relationship_evidence(malware) == (  # noqa: S101
+        "Evidence: sandbox 'Zenbox' detects emotet (malicious)."
     )

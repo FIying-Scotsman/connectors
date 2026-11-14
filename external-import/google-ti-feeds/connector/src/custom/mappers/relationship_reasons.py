@@ -209,29 +209,55 @@ def _card_points_to(card: Any, threat_name: str | None, threat_id: str | None) -
     return False
 
 
+def _sandbox_evidence(sandbox_verdicts: Any, malware_name: str | None) -> list[str]:
+    """Return the sandbox verdicts of a file naming the malware family."""
+    name = (malware_name or "").casefold()
+    if not name:
+        return []
+    parts = []
+    for sandbox, verdict in (sandbox_verdicts or {}).items():
+        names = getattr(verdict, "malware_names", None) or []
+        if name not in (detected.casefold() for detected in names):
+            continue
+        details = [
+            getattr(verdict, "category", None) or "",
+            (
+                f"confidence {verdict.confidence}"
+                if getattr(verdict, "confidence", None) is not None
+                else ""
+            ),
+        ]
+        detail_text = ", ".join(detail for detail in details if detail)
+        parts.append(
+            f"sandbox '{getattr(verdict, 'sandbox_name', None) or sandbox}' detects "
+            f"{', '.join(names)}" + (f" ({detail_text})" if detail_text else "")
+        )
+    return parts
+
+
 def ioc_threat_evidence(
     gti_assessment: Any,
     threat_type: str | None,
     threat_name: str | None,
     threat_id: str | None,
+    sandbox_verdicts: Any = None,
 ) -> str | None:
     """Return the GTI evidence of an IOC supporting its link to a threat.
 
-    Explanation cards linking to the threat, then the contributing factors
-    supporting a link to that type of threat.
+    Explanation cards linking to the threat, the contributing factors supporting a
+    link to that type of threat, then for malware the file sandbox verdicts naming it.
 
     Args:
         gti_assessment: GTI assessment of the IOC.
         threat_type: STIX type of the threat, e.g. 'intrusion-set'.
         threat_name: Name of the threat, matched to the card link titles.
         threat_id: GTI collection ID of the threat, matched to the card link IDs.
+        sandbox_verdicts: Sandbox verdicts of a file IOC, by sandbox.
 
     Returns:
         "Evidence: ...", or None when GTI gives none.
 
     """
-    if gti_assessment is None:
-        return None
     parts = []
     for category_cards in (
         getattr(gti_assessment, "gti_description_cards", None) or {}
@@ -248,6 +274,8 @@ def ioc_threat_evidence(
     for field in EVIDENCE_FACTORS.get(threat_type or "", ()):
         if getattr(factors, field, None) is True:
             parts.append(f"contributing factor '{CONTRIBUTING_FACTOR_LABELS[field]}'")
+    if threat_type == "malware":
+        parts.extend(_sandbox_evidence(sandbox_verdicts, threat_name))
     return f"Evidence: {'; '.join(parts)}." if parts else None
 
 
