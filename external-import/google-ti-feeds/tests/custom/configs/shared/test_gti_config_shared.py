@@ -76,6 +76,17 @@ def test_ioc_tags_as_labels(env: dict[str, str], expected: bool) -> None:
     assert _load_config(env).ioc_tags_as_labels is expected  # noqa: S101
 
 
+@pytest.mark.parametrize(
+    "env, expected", [({}, False), ({"GTI_IP_LINK_TO_ASN": "true"}, True)]
+)
+def test_ip_link_to_asn(env: dict[str, str], expected: bool) -> None:
+    """Autonomous systems are disabled by default."""
+    # Given a configuration with or without the option
+    # When it is loaded
+    # Then the option is set
+    assert _load_config(env).ip_link_to_asn is expected  # noqa: S101
+
+
 def test_gti_config_exposes_shared_settings() -> None:
     """The unified GTI configuration includes the shared settings."""
     # Given the unified configuration

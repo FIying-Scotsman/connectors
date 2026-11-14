@@ -25,20 +25,20 @@ LOG_PREFIX = "[BaseConverter]"
 
 IOC_OBSERVABLE_STIX_TYPES = ("domain-name", "file", "url", "ipv4-addr", "ipv6-addr")
 
+IOC_MAPPER_OPTIONS = (
+    "indicator_scoring",
+    "indicator_min_verdict",
+    "extended_descriptions",
+    "ioc_tags_as_labels",
+)
+
 # GTIConfig options forwarded to the mappers, by sub-entity type.
 MAPPER_OPTIONS: dict[str, tuple[str, ...]] = {
     "malware_families": ("enable_malware_aliases", "extended_descriptions"),
     "threat_actors": ("enable_threat_actor_aliases",),
     "vulnerabilities": ("extended_descriptions",),
-    **dict.fromkeys(
-        IOC_SUBENTITY_TYPES,
-        (
-            "indicator_scoring",
-            "indicator_min_verdict",
-            "extended_descriptions",
-            "ioc_tags_as_labels",
-        ),
-    ),
+    **dict.fromkeys(IOC_SUBENTITY_TYPES, IOC_MAPPER_OPTIONS),
+    "ip_addresses": (*IOC_MAPPER_OPTIONS, "ip_link_to_asn"),
 }
 
 

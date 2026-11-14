@@ -41,6 +41,13 @@ class GTISharedConfig(GTIBaseConfig):
         "data collection and the IOC deltas feed. Tags describe file types, "
         "behaviours and infrastructure traits, and can create many labels.",
     )
+    ip_link_to_asn: bool = Field(
+        default=False,
+        description="Whether to create the autonomous system of IP address IOCs, "
+        "with its number, owner and registry, and link the IP to it with "
+        "'belongs-to'. Applies to the IPs of every data collection; the IOC deltas "
+        "feed only imports indicators, so it is not affected.",
+    )
     ioc_import_threshold: int | None = Field(
         default=None,
         ge=1,

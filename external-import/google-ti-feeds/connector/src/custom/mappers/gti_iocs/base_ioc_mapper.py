@@ -40,6 +40,9 @@ class GTIIOCData(Protocol):
 
 IOCData = TypeVar("IOCData", bound=GTIIOCData)
 
+# Objects describing the IOC itself, not linked to the report, campaign or threat it comes from.
+IOC_CONTEXT_ONLY_TYPES = ("autonomous-system",)
+
 
 class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
     """Convert a GTI IOC to an observable, an indicator and a 'based-on' relationship.
@@ -65,9 +68,12 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
             target_entity: The converted IOC object
 
         Returns:
-            RelationshipModel: The relationship object
+            RelationshipModel | None: The relationship object, None for objects
+                describing the IOC itself, such as its autonomous system.
 
         """
+        if getattr(target_entity, "type", None) in IOC_CONTEXT_ONLY_TYPES:
+            return None
         if isinstance(target_entity, IndicatorModel):
             source_ref, target_ref = target_entity.id, src_entity.id
             relation_type = "indicates"
@@ -179,11 +185,17 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         self, indicator: IndicatorModel, observable: Any
     ) -> RelationshipModel:
         """Create the 'based-on' relationship from the indicator to the observable."""
+        return self._create_ioc_relationship("based-on", indicator, observable)
+
+    def _create_ioc_relationship(
+        self, relationship_type: str, source: Any, target: Any
+    ) -> RelationshipModel:
+        """Create a relationship between two objects of the IOC, with its timestamps."""
         timestamps = self._get_timestamps()
         return RelationshipModel(
-            relationship_type="based-on",
-            source_ref=indicator.id,
-            target_ref=observable.id,
+            relationship_type=relationship_type,
+            source_ref=source.id,
+            target_ref=target.id,
             created=timestamps["created"],
             modified=timestamps["modified"],
             created_by_ref=self.organization.id,

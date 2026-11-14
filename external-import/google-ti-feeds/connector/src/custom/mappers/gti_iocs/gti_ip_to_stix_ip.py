@@ -2,6 +2,7 @@
 
 import ipaddress
 from datetime import datetime, timezone
+from typing import Any
 
 from connector.src.custom.mappers.gti_iocs.base_ioc_mapper import BaseIOCMapper
 from connector.src.custom.models.gti.gti_ip_addresses_model import (
@@ -10,9 +11,14 @@ from connector.src.custom.models.gti.gti_ip_addresses_model import (
 from connector.src.stix.octi.models.ipv4_address_model import OctiIPv4AddressModel
 from connector.src.stix.octi.models.ipv6_address_model import OctiIPv6AddressModel
 from connector.src.stix.octi.observable_type_ov_enum import ObservableTypeOV
+from connector.src.stix.v21.models.scos.as_model import AutonomousSystemModel
 from connector.src.stix.v21.models.scos.ipv4_address_model import IPv4AddressModel
 from connector.src.stix.v21.models.scos.ipv6_address_model import IPv6AddressModel
-from stix2 import IPv4Address, IPv6Address  # type: ignore[import-untyped]
+from stix2 import (  # type: ignore[import-untyped]
+    AutonomousSystem,
+    IPv4Address,
+    IPv6Address,
+)
 
 
 class GTIIPToSTIXIP(BaseIOCMapper[GTIIPData]):
@@ -20,10 +26,56 @@ class GTIIPToSTIXIP(BaseIOCMapper[GTIIPData]):
 
     ioc_type = "ip_address"
 
+    def __init__(self, *args: Any, ip_link_to_asn: bool = False, **kwargs: Any) -> None:
+        """Initialize the mapper.
+
+        Args:
+            *args: See `BaseIOCMapper`.
+            ip_link_to_asn: Whether to link the IP to its autonomous system.
+            **kwargs: See `BaseIOCMapper`.
+
+        """
+        super().__init__(*args, **kwargs)
+        self.ip_link_to_asn = ip_link_to_asn
+
     @property
     def ip(self) -> GTIIPData:
         """The GTI ip address being converted."""
         return self.ioc
+
+    def to_stix(self) -> list[Any]:
+        """Convert the GTI IP, adding its autonomous system when enabled.
+
+        Returns:
+            list[Any]: The objects of `BaseIOCMapper.to_stix`, then the autonomous
+                system and the 'belongs-to' relationship from the IP.
+
+        """
+        stix_objects = super().to_stix()
+        autonomous_system = self._create_autonomous_system()
+        if autonomous_system is None:
+            return stix_objects
+        observable = stix_objects[0]
+        return [
+            *stix_objects,
+            autonomous_system,
+            self._create_ioc_relationship("belongs-to", observable, autonomous_system),
+        ]
+
+    def _create_autonomous_system(self) -> AutonomousSystem | None:
+        """Create the autonomous system of the IP when enabled and known."""
+        attributes = self.ip.attributes
+        if not self.ip_link_to_asn or not attributes or attributes.asn is None:
+            return None
+        return AutonomousSystemModel(
+            type="autonomous-system",
+            spec_version="2.1",
+            number=attributes.asn,
+            name=attributes.as_owner,
+            rir=attributes.regional_internet_registry,
+            object_marking_refs=[self.tlp_marking.id],
+            custom_properties={"x_opencti_created_by_ref": self.organization.id},
+        ).to_stix2_object()
 
     def _detect_ip_version(self) -> str:
         """Detect if IP is IPv4 or IPv6.
