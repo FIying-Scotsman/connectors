@@ -8,6 +8,7 @@ from connector.src.custom.convert_to_stix.convert_to_stix_base import BaseConver
 from connector.src.custom.mappers.gti_iocs.gti_links import gti_external_reference
 from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_assessment_description,
+    ioc_tag_labels,
 )
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
     compute_ioc_score,
@@ -216,6 +217,12 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             return None
         return build_assessment_description(attrs.gti_assessment)
 
+    def _get_labels(self, attrs: IOCDeltaAttributes) -> list[str] | None:
+        """Return the GTI tags as labels when enabled."""
+        if not self.config.ioc_tags_as_labels:
+            return None
+        return ioc_tag_labels(attrs.tags)
+
     def _convert_file(self, entry: IOCDeltaEntry) -> Indicator | None:
         """Convert a file IOC delta entry to a STIX Indicator with file observable."""
         attrs = entry.attributes
@@ -248,6 +255,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
             description=self._get_description(attrs),
+            labels=self._get_labels(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -298,6 +306,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
             description=self._get_description(attrs),
+            labels=self._get_labels(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -324,6 +333,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
             description=self._get_description(attrs),
+            labels=self._get_labels(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date
@@ -350,6 +360,7 @@ class ConvertToSTIXIndicator(BaseConvertToSTIX):
             markings=[self.tlp_marking],
             score=self._get_score(attrs),
             description=self._get_description(attrs),
+            labels=self._get_labels(attrs),
             valid_from=(
                 datetime.fromtimestamp(attrs.creation_date, tz=timezone.utc)
                 if attrs.creation_date

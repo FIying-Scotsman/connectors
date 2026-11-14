@@ -10,6 +10,7 @@ from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
 )
 from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
     build_assessment_description,
+    ioc_tag_labels,
     observable_description_properties,
 )
 from connector.src.custom.mappers.gti_iocs.ioc_scoring import (
@@ -90,6 +91,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         indicator_scoring: str = "threat_score",
         extended_descriptions: bool = False,
         indicator_min_verdict: str = "any",
+        ioc_tags_as_labels: bool = False,
     ) -> None:
         """Initialize the mapper.
 
@@ -100,6 +102,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
             indicator_scoring: Score strategy, see `compute_ioc_score`.
             extended_descriptions: Whether to describe the GTI assessment.
             indicator_min_verdict: Lowest verdict creating an indicator, see `meets_min_verdict`.
+            ioc_tags_as_labels: Whether to label the objects with the GTI tags.
 
         """
         self.ioc = ioc
@@ -108,6 +111,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
         self.indicator_scoring = indicator_scoring
         self.extended_descriptions = extended_descriptions
         self.indicator_min_verdict = indicator_min_verdict
+        self.ioc_tags_as_labels = ioc_tags_as_labels
 
     @abstractmethod
     def _create_stix_observable(self) -> Any:
@@ -161,6 +165,7 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
             indicator_types=self._determine_indicator_types(),
             score=self._get_score(),
             description=self._get_description(),
+            labels=self._get_labels(),
             external_references=[
                 gti_external_reference(
                     self.ioc_type, self.ioc.id, self._indicator_name()
@@ -187,7 +192,16 @@ class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
 
     def _observable_custom_properties(self) -> dict[str, Any]:
         """Return the custom properties shared by the observables."""
-        return observable_description_properties(self._get_description())
+        properties = observable_description_properties(self._get_description())
+        if labels := self._get_labels():
+            properties["x_opencti_labels"] = labels
+        return properties
+
+    def _get_labels(self) -> list[str] | None:
+        """Return the GTI tags when enabled, deduplicated, or None."""
+        if not self.ioc_tags_as_labels or not self.ioc.attributes:
+            return None
+        return ioc_tag_labels(getattr(self.ioc.attributes, "tags", None))
 
     def _get_description(self) -> str | None:
         """Get the GTI assessment summary when enabled.

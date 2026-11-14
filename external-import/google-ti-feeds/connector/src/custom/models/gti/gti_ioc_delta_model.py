@@ -41,6 +41,7 @@ class IOCDeltaAttributes(BaseModel):
     url: str | None = Field(None)
     # Common fields
     gti_assessment: GTIAssessment | None = Field(None)
+    tags: list[str] | None = Field(None)
     creation_date: int | None = Field(None)
     last_modification_date: int | None = Field(None)
 

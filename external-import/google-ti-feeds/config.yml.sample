@@ -16,6 +16,7 @@ gti:
   # indicator_require_threat_actor: false
   # indicator_scoring: threat_score
   # indicator_min_verdict: any
+  # ioc_tags_as_labels: false
   # ioc_import_threshold: 250
   # ioc_link_to_threats: false
   # intrusion_set_link_to_capabilities: false

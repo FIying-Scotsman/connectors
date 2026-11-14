@@ -65,6 +65,17 @@ def test_indicator_min_verdict_rejects_unknown_value() -> None:
         _load_config({"GTI_INDICATOR_MIN_VERDICT": "benign"})
 
 
+@pytest.mark.parametrize(
+    "env, expected", [({}, False), ({"GTI_IOC_TAGS_AS_LABELS": "true"}, True)]
+)
+def test_ioc_tags_as_labels(env: dict[str, str], expected: bool) -> None:
+    """Tags as labels are disabled by default."""
+    # Given a configuration with or without the option
+    # When it is loaded
+    # Then the option is set
+    assert _load_config(env).ioc_tags_as_labels is expected  # noqa: S101
+
+
 def test_gti_config_exposes_shared_settings() -> None:
     """The unified GTI configuration includes the shared settings."""
     # Given the unified configuration

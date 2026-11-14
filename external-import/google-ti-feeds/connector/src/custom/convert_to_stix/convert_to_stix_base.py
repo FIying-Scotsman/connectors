@@ -32,7 +32,12 @@ MAPPER_OPTIONS: dict[str, tuple[str, ...]] = {
     "vulnerabilities": ("extended_descriptions",),
     **dict.fromkeys(
         IOC_SUBENTITY_TYPES,
-        ("indicator_scoring", "indicator_min_verdict", "extended_descriptions"),
+        (
+            "indicator_scoring",
+            "indicator_min_verdict",
+            "extended_descriptions",
+            "ioc_tags_as_labels",
+        ),
     ),
 }
 

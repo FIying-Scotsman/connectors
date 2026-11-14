@@ -239,6 +239,7 @@ def test_malware_description_unchanged_by_default(
                 "indicator_scoring": "gti_derived",
                 "indicator_min_verdict": "malicious",
                 "extended_descriptions": True,
+                "ioc_tags_as_labels": True,
             },
         ),
         ("attack_techniques", {}),
@@ -253,6 +254,7 @@ def test_mapper_options(entity_type: str, expected: dict[str, Any]) -> None:
         indicator_scoring="gti_derived",
         indicator_min_verdict="malicious",
         extended_descriptions=True,
+        ioc_tags_as_labels=True,
     )
     converter = ConvertToSTIXReport(
         config=config, logger=logging.getLogger(__name__), tlp_level="white"

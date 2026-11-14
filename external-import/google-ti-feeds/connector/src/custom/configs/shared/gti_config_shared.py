@@ -34,6 +34,13 @@ class GTISharedConfig(GTIBaseConfig):
         "observables only, and are skipped by the IOC deltas feed, which only "
         "imports indicators.",
     )
+    ioc_tags_as_labels: bool = Field(
+        default=False,
+        description="Whether to add the GTI tags of IOCs (e.g. 'peexe', "
+        "'self-signed') as labels of their indicators and observables, for every "
+        "data collection and the IOC deltas feed. Tags describe file types, "
+        "behaviours and infrastructure traits, and can create many labels.",
+    )
     ioc_import_threshold: int | None = Field(
         default=None,
         ge=1,

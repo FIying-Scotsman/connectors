@@ -141,6 +141,11 @@ def build_assessment_description(gti_assessment: Any) -> str | None:
     )
 
 
+def ioc_tag_labels(tags: list[str] | None) -> list[str] | None:
+    """Return the GTI tags as labels, deduplicated in GTI order, or None."""
+    return list(dict.fromkeys(tag for tag in tags or [] if tag)) or None
+
+
 def observable_description_properties(description: str | None) -> dict[str, Any]:
     """Return the custom properties carrying an observable description."""
     return {"x_opencti_description": description} if description else {}

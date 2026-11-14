@@ -315,6 +315,7 @@ IOC options apply to the IOCs (files, domains, URLs, IP addresses) imported by a
 |-------------------------|----------------------------------------------------------|----------------|------------------------------------------------------|
 | `GTI_INDICATOR_SCORING` | Strategy used to compute the score of IOC indicators and observables | `threat_score` | `threat_score`, `gti_derived`, `average_detection` |
 | `GTI_INDICATOR_MIN_VERDICT` | Lowest GTI verdict for which an IOC gets an indicator. IOCs below it, or without a verdict, are imported as observables only; the IOC Delta feed, which only imports indicators, skips them | `any` | `any`, `suspicious` (suspicious and malicious), `malicious` |
+| `GTI_IOC_TAGS_AS_LABELS` | Add the GTI tags of IOCs (e.g. `peexe`, `self-signed`) as labels of their indicators and observables. Tags describe file types, behaviours and infrastructure traits, and can create many labels | `false` | `true` / `false` |
 | `GTI_IOC_IMPORT_THRESHOLD` | Maximum number of IOCs a report or campaign may reference for its IOCs to be fetched. Above it, the IOC sub-entities (`domains`, `files`, `urls`, `ip_addresses`) of that report or campaign are skipped and a warning is logged; its other sub-entities are still imported. Uses the `counters.iocs` value returned by GTI, so no extra API call is made | unset (disabled) | Integer `>= 1` |
 | `GTI_IOC_LINK_TO_THREATS` | Link the IOCs of a report or campaign to the intrusion sets and malware of that same report or campaign (and to its campaigns, for reports). See below | `false` | `true` / `false` |
 | `GTI_INTRUSION_SET_LINK_TO_CAPABILITIES` | Link the intrusion sets of a report or campaign to the malware, tools, attack patterns and vulnerabilities of that same report or campaign. See below | `false` | `true` / `false` |
@@ -675,6 +676,7 @@ For each IOC type, an **Indicator** is created with `create_observables=True`, w
 | `attributes.creation_date`                     | `valid_from`          | UTC timestamp when the IOC was first seen       |
 | `attributes.gti_assessment`                    | `x_opencti_score`     | Computed with `GTI_INDICATOR_SCORING`           |
 | `attributes.gti_assessment`                    | `description`         | When `GTI_EXTENDED_DESCRIPTIONS` is `true`      |
+| `attributes.tags`                              | `labels`              | When `GTI_IOC_TAGS_AS_LABELS` is `true`, also on observables |
 | `id`                                           | `external_references` | Link to the GTI page for this IOC, also set on the indicators of collection IOCs |
 
 #### Relationship mapping
