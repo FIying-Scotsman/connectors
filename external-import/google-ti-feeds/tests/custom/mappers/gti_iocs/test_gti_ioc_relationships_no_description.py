@@ -133,7 +133,7 @@ def domain_stix_objects(mock_organization, mock_tlp_marking) -> list[Any]:
         ),
     )
     mapper = GTIDomainToSTIXDomain(
-        domain=domain_data, organization=mock_organization, tlp_marking=mock_tlp_marking
+        domain_data, organization=mock_organization, tlp_marking=mock_tlp_marking
     )
     return mapper.to_stix()
 
@@ -150,7 +150,7 @@ def ip_stix_objects(mock_organization, mock_tlp_marking) -> list[Any]:
         ),
     )
     mapper = GTIIPToSTIXIP(
-        ip=ip_data, organization=mock_organization, tlp_marking=mock_tlp_marking
+        ip_data, organization=mock_organization, tlp_marking=mock_tlp_marking
     )
     return mapper.to_stix()
 
@@ -168,7 +168,7 @@ def url_stix_objects(mock_organization, mock_tlp_marking) -> list[Any]:
         ),
     )
     mapper = GTIUrlToSTIXUrl(
-        url=url_data, organization=mock_organization, tlp_marking=mock_tlp_marking
+        url_data, organization=mock_organization, tlp_marking=mock_tlp_marking
     )
     return mapper.to_stix()
 
@@ -189,7 +189,7 @@ def file_stix_objects(mock_organization, mock_tlp_marking) -> list[Any]:
         ),
     )
     mapper = GTIFileToSTIXFile(
-        file=file_data, organization=mock_organization, tlp_marking=mock_tlp_marking
+        file_data, organization=mock_organization, tlp_marking=mock_tlp_marking
     )
     return mapper.to_stix()
 

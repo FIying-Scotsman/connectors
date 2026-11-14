@@ -739,7 +739,7 @@ def test_create_stix_domain_method(
     mapper = _given_gti_domain_mapper(domain_data, mock_organization, mock_tlp_marking)
 
     # When creating STIX domain
-    domain_observable = mapper._create_stix_domain()
+    domain_observable = mapper._create_stix_observable()
 
     # Then domain observable should be created correctly
     assert domain_observable is not None  # noqa: S101
@@ -779,7 +779,7 @@ def _given_gti_domain_mapper(
 ) -> GTIDomainToSTIXDomain:
     """Create a GTIDomainToSTIXDomain mapper instance."""
     return GTIDomainToSTIXDomain(
-        domain=domain,
+        domain,
         organization=organization,
         tlp_marking=tlp_marking,
     )

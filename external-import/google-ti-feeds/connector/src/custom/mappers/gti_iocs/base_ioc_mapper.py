@@ -1,0 +1,213 @@
+"""Shared mapping of a GTI IOC to an observable, an indicator and their 'based-on' link."""
+
+from abc import ABC, abstractmethod
+from datetime import datetime, timezone
+from typing import Any, ClassVar, Generic, Protocol, TypeVar
+
+from connector.src.custom.mappers.gti_iocs.gti_links import gti_external_reference
+from connector.src.custom.mappers.gti_iocs.indicator_type_helpers import (
+    indicator_types_from_verdict,
+)
+from connector.src.custom.mappers.gti_iocs.ioc_assessment import (
+    build_assessment_description,
+    observable_description_properties,
+)
+from connector.src.custom.mappers.gti_iocs.ioc_scoring import compute_ioc_score
+from connector.src.stix.octi.models.indicator_model import OctiIndicatorModel
+from connector.src.stix.octi.models.relationship_model import OctiRelationshipModel
+from connector.src.stix.octi.observable_type_ov_enum import ObservableTypeOV
+from connector.src.stix.octi.pattern_type_ov_enum import PatternTypeOV
+from connector.src.stix.v21.models.ovs.indicator_type_ov_enums import IndicatorTypeOV
+from connector.src.stix.v21.models.sdos.indicator_model import IndicatorModel
+from connector.src.stix.v21.models.sros.relationship_model import RelationshipModel
+from connector.src.utils.converters.generic_converter_config import BaseMapper
+from connectors_sdk.models import (  # type: ignore[import-untyped]
+    OrganizationAuthor,
+    TLPMarking,
+)
+
+
+class GTIIOCData(Protocol):
+    """GTI IOC data: domain, file, IP address or URL."""
+
+    id: str
+    attributes: Any
+
+
+IOCData = TypeVar("IOCData", bound=GTIIOCData)
+
+
+class BaseIOCMapper(BaseMapper, ABC, Generic[IOCData]):
+    """Convert a GTI IOC to an observable, an indicator and a 'based-on' relationship.
+
+    Subclasses build the observable, the pattern and the timestamps.
+    """
+
+    # GTI IOC type, for the GTI page link: file, domain, ip_address or url.
+    ioc_type: ClassVar[str]
+
+    @staticmethod
+    def create_relationship(
+        src_entity: Any, relation_type: str, target_entity: Any
+    ) -> Any:
+        """Create a relationship between a context entity and a converted IOC object.
+
+        Indicators get 'indicates' from the indicator to the context entity, other
+        objects get ``relation_type`` from the context entity to the object.
+
+        Args:
+            src_entity: The context entity (e.g. intrusion set, campaign)
+            relation_type: The relationship type (e.g. "related-to")
+            target_entity: The converted IOC object
+
+        Returns:
+            RelationshipModel: The relationship object
+
+        """
+        if isinstance(target_entity, IndicatorModel):
+            source_ref, target_ref = target_entity.id, src_entity.id
+            relation_type = "indicates"
+        else:
+            source_ref, target_ref = src_entity.id, target_entity.id
+        return OctiRelationshipModel.create(
+            relationship_type=relation_type,
+            source_ref=source_ref,
+            target_ref=target_ref,
+            organization_id=src_entity.created_by_ref,
+            marking_ids=src_entity.object_marking_refs,
+            created=datetime.now(tz=timezone.utc),
+            modified=datetime.now(tz=timezone.utc),
+        )
+
+    def __init__(
+        self,
+        ioc: IOCData,
+        organization: OrganizationAuthor,
+        tlp_marking: TLPMarking,
+        indicator_scoring: str = "threat_score",
+        extended_descriptions: bool = False,
+    ) -> None:
+        """Initialize the mapper.
+
+        Args:
+            ioc: The GTI IOC data to convert.
+            organization: The author of the objects.
+            tlp_marking: The TLP marking of the objects.
+            indicator_scoring: Score strategy, see `compute_ioc_score`.
+            extended_descriptions: Whether to describe the GTI assessment.
+
+        """
+        self.ioc = ioc
+        self.organization = organization
+        self.tlp_marking = tlp_marking
+        self.indicator_scoring = indicator_scoring
+        self.extended_descriptions = extended_descriptions
+
+    @abstractmethod
+    def _create_stix_observable(self) -> Any:
+        """Create the STIX observable."""
+
+    @abstractmethod
+    def _build_stix_pattern(self) -> str:
+        """Build the STIX pattern of the indicator."""
+
+    @abstractmethod
+    def _observable_type(self) -> ObservableTypeOV:
+        """Return the main observable type of the indicator."""
+
+    @abstractmethod
+    def _get_timestamps(self) -> dict[str, datetime]:
+        """Return the 'created' and 'modified' timestamps of the objects."""
+
+    def _indicator_name(self) -> str:
+        """Return the indicator name, the GTI ID by default."""
+        return self.ioc.id
+
+    def to_stix(self) -> list[Any]:
+        """Convert the GTI IOC to STIX objects.
+
+        Returns:
+            list[Any]: The observable, the indicator and their relationship.
+
+        """
+        observable = self._create_stix_observable()
+        indicator = self._create_stix_indicator()
+        return [observable, indicator, self._create_based_on(indicator, observable)]
+
+    def _create_stix_indicator(self) -> IndicatorModel:
+        """Create the STIX indicator.
+
+        Returns:
+            IndicatorModel: The STIX indicator model object.
+
+        """
+        timestamps = self._get_timestamps()
+        return OctiIndicatorModel.create(
+            name=self._indicator_name(),
+            pattern=self._build_stix_pattern(),
+            pattern_type=PatternTypeOV.STIX,
+            observable_type=self._observable_type(),
+            organization_id=self.organization.id,
+            marking_ids=[self.tlp_marking.id],
+            indicator_types=self._determine_indicator_types(),
+            score=self._get_score(),
+            description=self._get_description(),
+            external_references=[
+                gti_external_reference(
+                    self.ioc_type, self.ioc.id, self._indicator_name()
+                )
+            ],
+            created=timestamps["created"],
+            modified=timestamps["modified"],
+        )
+
+    def _create_based_on(
+        self, indicator: IndicatorModel, observable: Any
+    ) -> RelationshipModel:
+        """Create the 'based-on' relationship from the indicator to the observable."""
+        timestamps = self._get_timestamps()
+        return RelationshipModel(
+            relationship_type="based-on",
+            source_ref=indicator.id,
+            target_ref=observable.id,
+            created=timestamps["created"],
+            modified=timestamps["modified"],
+            created_by_ref=self.organization.id,
+            object_marking_refs=[self.tlp_marking.id],
+        )
+
+    def _observable_custom_properties(self) -> dict[str, Any]:
+        """Return the custom properties shared by the observables."""
+        return observable_description_properties(self._get_description())
+
+    def _get_description(self) -> str | None:
+        """Get the GTI assessment summary when enabled.
+
+        Returns:
+            str | None: The description, None when disabled or empty
+
+        """
+        if not self.extended_descriptions or not self.ioc.attributes:
+            return None
+        return build_assessment_description(self.ioc.attributes.gti_assessment)
+
+    def _get_score(self) -> int | None:
+        """Get the score computed with the configured scoring strategy.
+
+        Returns:
+            int | None: The score if available, None otherwise
+
+        """
+        return compute_ioc_score(self.ioc.attributes, self.indicator_scoring)
+
+    def _determine_indicator_types(self) -> list[IndicatorTypeOV]:
+        """Determine indicator types from the GTI assessment verdict.
+
+        Returns:
+            list[IndicatorTypeOV]: list of indicator types, empty when no
+            classification is available (field should be omitted downstream).
+
+        """
+        if not self.ioc.attributes:
+            return []
+        return indicator_types_from_verdict(self.ioc.attributes.gti_assessment)

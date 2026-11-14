@@ -873,7 +873,7 @@ def test_create_stix_ipv4_method(
     mapper = _given_gti_ip_mapper(ip_data, mock_organization, mock_tlp_marking)
 
     # When creating STIX IP
-    ip_observable = mapper._create_stix_ip()
+    ip_observable = mapper._create_stix_observable()
 
     # Then IPv4 observable should be created correctly
     assert ip_observable is not None  # noqa: S101
@@ -901,7 +901,7 @@ def test_create_stix_ipv6_method(
     mapper = _given_gti_ip_mapper(ip_data, mock_organization, mock_tlp_marking)
 
     # When creating STIX IP
-    ip_observable = mapper._create_stix_ip()
+    ip_observable = mapper._create_stix_observable()
 
     # Then IPv6 observable should be created correctly
     assert ip_observable is not None  # noqa: S101
@@ -943,7 +943,7 @@ def _given_gti_ip_mapper(
 ) -> GTIIPToSTIXIP:
     """Create a GTIIPToSTIXIP mapper instance."""
     return GTIIPToSTIXIP(
-        ip=ip,
+        ip,
         organization=organization,
         tlp_marking=tlp_marking,
     )

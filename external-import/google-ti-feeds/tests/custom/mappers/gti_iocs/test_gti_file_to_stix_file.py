@@ -894,7 +894,7 @@ def test_create_stix_file_method(
     mapper = _given_gti_file_mapper(file_data, mock_organization, mock_tlp_marking)
 
     # When creating STIX file
-    file_observable = mapper._create_stix_file()
+    file_observable = mapper._create_stix_observable()
 
     # Then file observable should be created correctly
     assert file_observable is not None  # noqa: S101
@@ -951,7 +951,7 @@ def test_file_observable_ctime_property(
     mapper = _given_gti_file_mapper(file_data, mock_organization, mock_tlp_marking)
 
     # When creating STIX file
-    file_observable = mapper._create_stix_file()
+    file_observable = mapper._create_stix_observable()
 
     # Then file should have correct ctime
     _then_stix_file_has_correct_ctime(file_observable, file_data)
@@ -975,7 +975,7 @@ def test_file_observable_without_creation_date(
     mapper = _given_gti_file_mapper(file_data, mock_organization, mock_tlp_marking)
 
     # When creating STIX file
-    file_observable = mapper._create_stix_file()
+    file_observable = mapper._create_stix_observable()
 
     # Then file should not have ctime or it should be None
     _then_stix_file_has_correct_ctime(file_observable, file_data)
@@ -986,7 +986,7 @@ def _given_gti_file_mapper(
 ) -> GTIFileToSTIXFile:
     """Create a GTIFileToSTIXFile mapper instance."""
     return GTIFileToSTIXFile(
-        file=file,
+        file,
         organization=organization,
         tlp_marking=tlp_marking,
     )

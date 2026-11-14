@@ -873,7 +873,7 @@ def test_create_stix_url_method(
     mapper = _given_gti_url_mapper(url_data, mock_organization, mock_tlp_marking)
 
     # When creating STIX URL
-    url_observable = mapper._create_stix_url()
+    url_observable = mapper._create_stix_observable()
 
     # Then URL observable should be created correctly
     assert url_observable is not None  # noqa: S101
@@ -913,7 +913,7 @@ def _given_gti_url_mapper(
 ) -> GTIUrlToSTIXUrl:
     """Create a GTIUrlToSTIXUrl mapper instance."""
     return GTIUrlToSTIXUrl(
-        url=url,
+        url,
         organization=organization,
         tlp_marking=tlp_marking,
     )
