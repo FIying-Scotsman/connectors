@@ -177,7 +177,6 @@ class ConnectorAbuseIPDB:
                 createdBy=identity["id"],
                 objects=[opencti_entity["id"]],
                 note_types=["analysis"],
-                confidence=75,
             )
             self.helper.connector_logger.debug(
                 f"[AbuseIPDB] Note created with ID: {note_id} and linked to observable."
