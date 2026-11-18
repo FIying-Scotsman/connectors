@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.filigran.io/connectors/csis_config.schema.json",
+  "type": "object",
+  "properties": {
+    "OPENCTI_URL": {
+      "description": "The base URL of the OpenCTI instance.",
+      "format": "uri",
+      "maxLength": 2083,
+      "minLength": 1,
+      "type": "string"
+    },
+    "OPENCTI_TOKEN": {
+      "description": "The API token to connect to OpenCTI.",
+      "format": "password",
+      "type": "string",
+      "writeOnly": true
+    },
+    "CONNECTOR_NAME": {
+      "default": "CSIS Cyber Data Feed",
+      "description": "The name of the connector.",
+      "type": "string"
+    },
+    "CONNECTOR_SCOPE": {
+      "default": [
+        "IPv4-Addr",
+        "IPv6-Addr",
+        "Domain-Name",
+        "Indicator",
+        "Malware",
+        "Intrusion-Set"
+      ],
+      "description": "The scope of the connector, i.e. the entity types it imports.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "CONNECTOR_LOG_LEVEL": {
+      "default": "error",
+      "description": "The minimum level of logs to display.",
+      "enum": [
+        "debug",
+        "info",
+        "warn",
+        "warning",
+        "error"
+      ],
+      "type": "string"
+    },
+    "CONNECTOR_TYPE": {
+      "const": "EXTERNAL_IMPORT",
+      "default": "EXTERNAL_IMPORT",
+      "type": "string"
+    },
+    "CONNECTOR_DURATION_PERIOD": {
+      "default": "PT6H",
+      "description": "Time to wait between two runs of the connector, as an ISO 8601 duration (e.g. `PT6H` for six hours).",
+      "format": "duration",
+      "type": "string"
+    },
+    "CSIS_CLIENT_ID": {
+      "description": "CSIS OAuth2 client ID.",
+      "format": "password",
+      "type": "string",
+      "writeOnly": true
+    },
+    "CSIS_CLIENT_SECRET": {
+      "description": "CSIS OAuth2 client secret.",
+      "format": "password",
+      "type": "string",
+      "writeOnly": true
+    },
+    "CSIS_FEED_TYPES": {
+      "default": [
+        "advanced"
+      ],
+      "description": "Comma-separated CSIS CDF feeds to ingest: `essential` (IOCs + malware) and/or `advanced` (IOCs + malware + threat category + threat actors).",
+      "items": {
+        "enum": [
+          "essential",
+          "advanced"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "CSIS_TLP_LEVEL": {
+      "description": "TLP marking applied to every object this connector creates.",
+      "enum": [
+        "clear",
+        "white",
+        "green",
+        "amber",
+        "amber+strict",
+        "red"
+      ],
+      "type": "string",
+      "default": "amber"
+    },
+    "CSIS_MIN_CONFIDENCE_SCORE": {
+      "default": 0,
+      "description": "Minimum CSIS `confidence_score` (0-100) an IOC must have to be ingested.",
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "CSIS_REQUEST_TIMEOUT_SECONDS": {
+      "default": 60,
+      "description": "Timeout in seconds for each request to the CSIS API.",
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "OPENCTI_URL",
+    "OPENCTI_TOKEN",
+    "CSIS_CLIENT_ID",
+    "CSIS_CLIENT_SECRET"
+  ],
+  "additionalProperties": true
+}

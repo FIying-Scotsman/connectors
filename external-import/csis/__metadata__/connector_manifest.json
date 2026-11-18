@@ -1,0 +1,26 @@
+{
+  "title": "CSIS Cyber Data Feed",
+  "slug": "csis",
+  "description": "Imports Indicators of Compromise (malicious domains and IP addresses) from the CSIS Cyber Data Feed (CDF), linked to the associated malware families and, on the advanced feed, threat categories and threat actors.",
+  "short_description": "Imports CSIS malicious domain/IP indicators linked to malware families and threat actors.",
+  "logo": null,
+  "use_cases": [
+    "Adversary & Campaign Insights"
+  ],
+  "solution_categories": [
+    "Threat Intelligence Feed"
+  ],
+  "license_type": "Commercial",
+  "contact": "https://github.com/FIying-Scotsman",
+  "verified": false,
+  "last_verified_date": null,
+  "playbook_supported": false,
+  "max_confidence_level": 100,
+  "support_version": ">=7.261117.0",
+  "subscription_link": "https://www.csis.com",
+  "source_code": "https://github.com/OpenCTI-Platform/connectors/tree/master/external-import/csis",
+  "manager_supported": true,
+  "container_version": "rolling",
+  "container_image": "opencti/connector-csis",
+  "container_type": "EXTERNAL_IMPORT"
+}

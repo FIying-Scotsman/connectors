@@ -1,0 +1,18 @@
+opencti:
+  url: 'http://localhost:8080'
+  token: 'ChangeMe'
+
+connector:
+  id: 'ChangeMe'
+  # name: 'CSIS Cyber Data Feed'
+  # scope: 'IPv4-Addr,IPv6-Addr,Domain-Name,Indicator,Malware,Intrusion-Set'
+  # log_level: 'error'
+  # duration_period: 'PT6H'
+
+csis:
+  client_id: 'ChangeMe'
+  client_secret: 'ChangeMe'
+  # feed_types: 'advanced' # 'essential', 'advanced' or 'essential,advanced'
+  # tlp_level: 'amber' # 'clear', 'white', 'green', 'amber', 'amber+strict', 'red'
+  # min_confidence_score: 0
+  # request_timeout_seconds: 60
