@@ -38,7 +38,7 @@ the current layout, so read it before creating or restructuring a connector.
 │   └── logo.png
 ├── src/
 │   ├── connector/
-│   │   ├── settings.py              Pydantic config (connectors-sdk BaseConnectorSettings)
+│   │   ├── settings.py              Pydantic config (connectors-sdk Base<Type>ConnectorSettings)
 │   │   └── ...
 │   ├── main.py                      Entry point
 │   └── requirements.txt
@@ -64,7 +64,12 @@ Older connectors still use `get_config_variable`, a monolithic single file or
   duplicate entity in OpenCTI on every run, and the STIX ID pylint job fails
   the PR.
 - **Configuration goes through Pydantic settings** in `src/connector/settings.py`,
-  built on `connectors_sdk.BaseConnectorSettings`. Values come from environment
+  built on `connectors_sdk.BaseConnectorSettings`. New connectors use the
+  subclass for their type, as in `templates/<type>/`
+  (`BaseExternalImportConnectorSettings`, `BaseInternalEnrichmentConnectorSettings`,
+  `BaseStreamConnectorSettings`, `BaseInternalImportFileConnectorSettings` or
+  `BaseInternalExportFileConnectorSettings`); `ExternalImportConnector`
+  requires `BaseExternalImportConnectorSettings`. Values come from environment
   variables or `config.yml`. Mark secrets as `SecretStr`.
 - **New external-import connectors** use `connectors_sdk.ExternalImportConnector`
   with data processors (`collect()` then `transform()`) and a `ConnectorState`.
@@ -228,6 +233,14 @@ skills and agents from `.claude/` (Claude Code, GitHub Copilot) pick up the
 `connector-manager-supported-migrator` agent. With other tools, follow the
 procedure file directly.
 
+## Deprecating a connector
+
+There is no formal ceremony yet. Follow `docs/06-connector-deprecation-process.md`.
+In short: mark the manifest `title`, `description` and `short_description`,
+add a runtime warning, a README banner and a `DEPRECATION.md`, and leave the
+connector's behaviour and configuration unchanged. Use a `[PLACEHOLDER]` token
+for any date, replacement or contact that is not known. Never invent them.
+
 ## Validation commands
 
 Run these from the repository root before proposing a commit. CI runs the same
@@ -274,6 +287,11 @@ Things to know about `run_test.sh`:
   subdirectory) at `RELEASE_REF` (default `master`), and installs the local
   `connectors-sdk` when the connector depends on it. A test that passes with
   the pinned pycti can still fail here.
+- It blocks network access with `pytest-socket`: only localhost and Unix
+  sockets are allowed, and any other connection raises
+  `SocketConnectBlockedError`. Mock every external API call (constructors and
+  startup checks included). A test that really needs a host opts in with
+  `@pytest.mark.allow_hosts([...])`.
 - Coverage and JUnit output go to `test_outputs/`.
 
 Changes to `connectors-sdk/` must keep 100% test coverage
